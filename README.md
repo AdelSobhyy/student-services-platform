@@ -30,7 +30,7 @@ Ownership follows the functional requirement allocation in the project document.
 
 ## Planned tech stack
 
-Frontend, backend, database, and deployment tooling: awaiting the team’s confirmed choices. Update before submission.
+Backend: Node.js 24 with Express 5. Database: PostgreSQL 17, isolated per service. Containers: Docker and Docker Compose. CI and registry: GitHub Actions and GHCR. Frontend remains unselected.
 
 ## Planned folder structure
 
@@ -62,3 +62,8 @@ student-services-platform/
 ## Jira board
 
 [Student Services Platform Jira board](https://youseff0hishodent.atlassian.net/jira/software/projects/SSP/boards/34)
+
+
+## Development and containers
+
+Chosen stack: Node.js 24, Express 5, PostgreSQL 17. See [Docker and CI instructions](docs/devops.md). Start the eight-service development foundation with `docker compose up`. This is sample infrastructure code; full product features remain to be implemented.

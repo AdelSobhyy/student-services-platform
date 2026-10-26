@@ -1,0 +1,258 @@
+name: student-services-platform
+services:
+  user-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: user
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+      - ./services/user-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d user"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  user-service:
+    build: ./services/user-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-user-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://user:${DEV_DB_PASSWORD:-ssp-local-demo-only}@user-db:5432/user
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks: [backend]
+  accommodation-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: accommodation
+      POSTGRES_USER: accommodation
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - accommodation-db-data:/var/lib/postgresql/data
+      - ./services/accommodation-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accommodation -d accommodation"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  accommodation-service:
+    build: ./services/accommodation-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-accommodation-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://accommodation:${DEV_DB_PASSWORD:-ssp-local-demo-only}@accommodation-db:5432/accommodation
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3002:3000"
+    depends_on:
+      accommodation-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  transport-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: transport
+      POSTGRES_USER: transport
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - transport-db-data:/var/lib/postgresql/data
+      - ./services/transport-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U transport -d transport"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  transport-service:
+    build: ./services/transport-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-transport-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://transport:${DEV_DB_PASSWORD:-ssp-local-demo-only}@transport-db:5432/transport
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3003:3000"
+    depends_on:
+      transport-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  club-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: club
+      POSTGRES_USER: club
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - club-db-data:/var/lib/postgresql/data
+      - ./services/club-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U club -d club"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  club-service:
+    build: ./services/club-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-club-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://club:${DEV_DB_PASSWORD:-ssp-local-demo-only}@club-db:5432/club
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3004:3000"
+    depends_on:
+      club-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  dining-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: dining
+      POSTGRES_USER: dining
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - dining-db-data:/var/lib/postgresql/data
+      - ./services/dining-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dining -d dining"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  dining-service:
+    build: ./services/dining-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-dining-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://dining:${DEV_DB_PASSWORD:-ssp-local-demo-only}@dining-db:5432/dining
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3005:3000"
+    depends_on:
+      dining-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  communication-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: communication
+      POSTGRES_USER: communication
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - communication-db-data:/var/lib/postgresql/data
+      - ./services/communication-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U communication -d communication"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  communication-service:
+    build: ./services/communication-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-communication-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://communication:${DEV_DB_PASSWORD:-ssp-local-demo-only}@communication-db:5432/communication
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3006:3000"
+    depends_on:
+      communication-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  library-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: library
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - library-db-data:/var/lib/postgresql/data
+      - ./services/library-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library -d library"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  library-service:
+    build: ./services/library-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-library-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://library:${DEV_DB_PASSWORD:-ssp-local-demo-only}@library-db:5432/library
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3007:3000"
+    depends_on:
+      library-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+  payment-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: payment
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-ssp-local-demo-only}
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+      - ./services/payment-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payment"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+  payment-service:
+    build: ./services/payment-service
+    image: ghcr.io/${GHCR_OWNER:-adelsobhyy}/student-services-platform-payment-service:${IMAGE_TAG:-local}
+    init: true
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgresql://payment:${DEV_DB_PASSWORD:-ssp-local-demo-only}@payment-db:5432/payment
+      USER_SERVICE_URL: http://user-service:3000
+    ports:
+      - "127.0.0.1:3008:3000"
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks: [backend]
+networks:
+  backend:
+volumes:
+  user-db-data:
+  accommodation-db-data:
+  transport-db-data:
+  club-db-data:
+  dining-db-data:
+  communication-db-data:
+  library-db-data:
+  payment-db-data:
