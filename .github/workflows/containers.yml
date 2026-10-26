@@ -1,0 +1,62 @@
+name: Build test and publish containers
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: containers-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate Compose
+        run: docker compose config --quiet
+      - name: Build and start all services and databases
+        run: docker compose up --build --detach --wait --wait-timeout 300
+      - name: Test database-backed endpoints and upstream connectivity
+        run: docker compose exec -T user-service node --version && node scripts/smoke.mjs
+      - name: Container status and logs
+        if: always()
+        run: docker compose ps --all && docker compose logs --no-color --tail=100
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+  publish:
+    needs: verify
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [user-service, accommodation-service, transport-service, club-service, dining-service, communication-service, library-service, payment-service]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish tested service
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          IMAGE="ghcr.io/$OWNER/student-services-platform-$SERVICE"
+          CHANNEL="$GITHUB_REF_NAME"
+          if [ "$CHANNEL" = main ]; then CHANNEL=latest; fi
+          docker build --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "$IMAGE:$GITHUB_SHA" -t "$IMAGE:$CHANNEL" "services/$SERVICE"
+          docker push "$IMAGE:$GITHUB_SHA"
+          docker push "$IMAGE:$CHANNEL"
