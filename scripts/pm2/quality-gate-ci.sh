@@ -66,8 +66,7 @@ export SONAR_TOKEN
 
 # This one-checkout Community Build project analyzes its snapshot as the main branch.
 scan_result=0
-env -u GITHUB_ACTIONS -u GITHUB_REF -u GITHUB_HEAD_REF -u GITHUB_BASE_REF \
-  -u GITHUB_EVENT_NAME scripts/pm2/quality-gate.sh || scan_result=$?
+scripts/pm2/quality-gate.sh || scan_result=$?
 sonar_api "api/qualitygates/project_status?projectKey=$project" |
   jq . | tee pm2-java/target/sonar-quality-gate.json
 exit "$scan_result"
