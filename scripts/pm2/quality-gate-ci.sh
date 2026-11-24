@@ -27,31 +27,40 @@ if [[ "$ready" != true ]]; then
   exit 1
 fi
 
-admin_password=$(openssl rand -hex 24)
-printf '::add-mask::%s\n' "$admin_password"
-curl --fail-with-body --silent --show-error --max-time 20 --user admin:admin \
-  --data-urlencode login=admin --data-urlencode previousPassword=admin \
-  --data-urlencode "password=$admin_password" \
-  "$SONAR_HOST_URL/api/users/change_password" >/dev/null
+admin_password=admin
+new_password="Pm2!$(openssl rand -hex 24)"
+printf '::add-mask::%s\n' "$new_password"
 
 sonar_api() {
-  curl --fail-with-body --silent --show-error --max-time 20 \
-    --user "admin:$admin_password" "$@"
+  local endpoint=$1
+  shift
+  local body
+  if ! body=$(curl --fail-with-body --silent --show-error --max-time 20 \
+      --user "admin:$admin_password" "$@" "$SONAR_HOST_URL/$endpoint"); then
+    printf 'SonarQube API request failed: %s\n' "$endpoint" >&2
+    if [[ -n "$body" ]]; then
+      jq -r '.errors[]?.msg' <<<"$body" >&2 || true
+    fi
+    return 1
+  fi
+  printf '%s' "$body"
 }
 
-sonar_api --data-urlencode "project=$project" --data-urlencode name='Student Services PM2' \
-  --data-urlencode mainBranch=main "$SONAR_HOST_URL/api/projects/create" >/dev/null
-sonar_api --data-urlencode "name=$gate" "$SONAR_HOST_URL/api/qualitygates/create" >/dev/null
-sonar_api --data-urlencode "gateName=$gate" --data-urlencode metric=coverage \
-  --data-urlencode op=LT --data-urlencode error=80 \
-  "$SONAR_HOST_URL/api/qualitygates/create_condition" >/dev/null
-sonar_api --data-urlencode "gateName=$gate" --data-urlencode metric=duplicated_lines_density \
-  --data-urlencode op=GT --data-urlencode error=3 \
-  "$SONAR_HOST_URL/api/qualitygates/create_condition" >/dev/null
-sonar_api --data-urlencode "projectKey=$project" --data-urlencode "gateName=$gate" \
-  "$SONAR_HOST_URL/api/qualitygates/select" >/dev/null
-SONAR_TOKEN=$(sonar_api --data-urlencode name=pm2-ci --data-urlencode type=PROJECT_ANALYSIS_TOKEN \
-  --data-urlencode "projectKey=$project" "$SONAR_HOST_URL/api/user_tokens/generate" | jq -er .token)
+sonar_api api/users/change_password --data-urlencode login=admin \
+  --data-urlencode previousPassword=admin --data-urlencode "password=$new_password" >/dev/null
+admin_password=$new_password
+sonar_api api/projects/create --data-urlencode "project=$project" \
+  --data-urlencode name='Student Services PM2' >/dev/null
+sonar_api api/qualitygates/create --data-urlencode "name=$gate" >/dev/null
+sonar_api api/qualitygates/create_condition --data-urlencode "gateName=$gate" \
+  --data-urlencode metric=coverage --data-urlencode op=LT --data-urlencode error=80 >/dev/null
+sonar_api api/qualitygates/create_condition --data-urlencode "gateName=$gate" \
+  --data-urlencode metric=duplicated_lines_density --data-urlencode op=GT \
+  --data-urlencode error=3 >/dev/null
+sonar_api api/qualitygates/select --data-urlencode "projectKey=$project" \
+  --data-urlencode "gateName=$gate" >/dev/null
+SONAR_TOKEN=$(sonar_api api/user_tokens/generate --data-urlencode name=pm2-ci \
+  --data-urlencode type=PROJECT_ANALYSIS_TOKEN --data-urlencode "projectKey=$project" | jq -er .token)
 printf '::add-mask::%s\n' "$SONAR_TOKEN"
 export SONAR_TOKEN
 
@@ -59,6 +68,6 @@ export SONAR_TOKEN
 scan_result=0
 env -u GITHUB_ACTIONS -u GITHUB_REF -u GITHUB_HEAD_REF -u GITHUB_BASE_REF \
   -u GITHUB_EVENT_NAME scripts/pm2/quality-gate.sh || scan_result=$?
-sonar_api "$SONAR_HOST_URL/api/qualitygates/project_status?projectKey=$project" |
+sonar_api "api/qualitygates/project_status?projectKey=$project" |
   jq . | tee pm2-java/target/sonar-quality-gate.json
 exit "$scan_result"
