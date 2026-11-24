@@ -67,3 +67,15 @@ student-services-platform/
 ## Development and containers
 
 Chosen stack: Node.js 24, Express 5, PostgreSQL 17. See [Docker and CI instructions](docs/devops.md). Start the eight-service development foundation with `docker compose up`. This is sample infrastructure code; full product features remain to be implemented.
+
+## PM2 Java DevOps
+
+Run the Java 21 build, JUnit and Mockito tests, and JaCoCo coverage with:
+
+```sh
+mvn --batch-mode -f pm2-java/pom.xml clean verify
+```
+
+GitHub Actions runs the build on a GitHub-hosted Ubuntu runner and uploads the Surefire and JaCoCo reports. Its [workflow](.github/workflows/ci.yml) reads `SONAR_HOST_URL` from an Actions variable and `SONAR_TOKEN` from an Actions secret. The [Jenkinsfile](Jenkinsfile) runs the same Maven build on a configured agent with Java 21, Maven and a POSIX shell. Jenkins publishes the JUnit results and archives JaCoCo coverage. Set `SONAR_HOST_URL` in the Jenkins job or agent environment and save the token as a Secret text credential with the ID `pm2-sonar-token`.
+
+Both pipelines run the same [SonarQube script](scripts/pm2/quality-gate.sh). The Maven scanner imports the JaCoCo XML report and waits for the SonarQube quality gate result. The server must be reachable from each runner or agent.
