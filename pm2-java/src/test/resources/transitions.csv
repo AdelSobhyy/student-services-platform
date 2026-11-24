@@ -1,0 +1,105 @@
+User,INITIAL,register,ACTIVE,register()
+User,ACTIVE,suspend,SUSPENDED,manageAccountStatus(SUSPENDED) [by admin]
+User,SUSPENDED,activate,ACTIVE,manageAccountStatus(ACTIVE)
+User,ACTIVE,deactivate,DEACTIVATED,manageAccountStatus(DEACTIVATED)
+User,SUSPENDED,deactivate,DEACTIVATED,manageAccountStatus(DEACTIVATED)
+User,DEACTIVATED,activate,ACTIVE,manageAccountStatus(ACTIVE) [reactivate]
+User,DEACTIVATED,close,END,account closed
+User,SUSPENDED,login,REJECT,login() / rejected – AccountSuspendedException
+User,DEACTIVATED,login,REJECT,login() / rejected – AccountDeactivatedException
+User,DEACTIVATED,suspend,REJECT,manageAccountStatus(SUSPENDED) / rejected – InvalidTransition
+User,ACTIVE,activate,REJECT,manageAccountStatus(ACTIVE) / rejected – already ACTIVE
+Room,INITIAL,create,AVAILABLE,manageRooms()
+Room,AVAILABLE,bookLastSpace,BOOKED,updateAvailability(BOOKED) [availableSpaces = 0]
+Room,BOOKED,release,AVAILABLE,cancelBooking() [space released]
+Room,AVAILABLE,maintain,MAINTENANCE,updateAvailability(MAINTENANCE)
+Room,MAINTENANCE,restore,AVAILABLE,updateAvailability(AVAILABLE)
+Room,AVAILABLE,remove,END,room removed
+Room,MAINTENANCE,bookLastSpace,REJECT,bookRoom() / rejected – RoomNotAvailableException
+Room,BOOKED,bookLastSpace,REJECT,bookRoom() / rejected – RoomNotAvailableException
+Room,BOOKED,maintain,REJECT,updateAvailability(MAINTENANCE) / rejected – active booking conflict
+Booking,INITIAL,book,PENDING,bookRoom()
+Booking,PENDING,paid,CONFIRMED,payFees() = true
+Booking,PENDING,declined,FAILED,payFees() = false
+Booking,CONFIRMED,cancel,CANCELLED,cancelBooking()
+Booking,PENDING,cancel,CANCELLED,cancelBooking()
+Booking,CONFIRMED,checkout,COMPLETED,check-out date reached
+Booking,CANCELLED,cancel,REJECT,cancelBooking() / rejected – already CANCELLED
+Booking,FAILED,cancel,REJECT,cancelBooking() / rejected – nothing to cancel
+Booking,COMPLETED,cancel,REJECT,cancelBooking() / rejected – InvalidTransition
+Booking,CANCELLED,paid,REJECT,payFees() / rejected – InvalidTransition
+TransportBooking,INITIAL,book,PENDING,bookSeat()
+TransportBooking,PENDING,paid,CONFIRMED,payFees() = true
+TransportBooking,PENDING,declined,FAILED,payFees() = false
+TransportBooking,CONFIRMED,cancel,CANCELLED,cancelBooking() [seat released]
+TransportBooking,CONFIRMED,complete,COMPLETED,trip date passed
+TransportBooking,CANCELLED,cancel,REJECT,cancelBooking() / rejected – already CANCELLED
+TransportBooking,COMPLETED,cancel,REJECT,cancelBooking() / rejected – trip already done
+TransportBooking,FAILED,paid,REJECT,payFees() / rejected – InvalidTransition
+Membership,INITIAL,join,ACTIVE,joinClub()
+Membership,ACTIVE,leave,LEFT,leaveClub()
+Membership,LEFT,join,ACTIVE,joinClub() [re-join]
+Membership,LEFT,remove,END,membership removed
+Membership,ACTIVE,join,REJECT,joinClub() / rejected – already a member (returns false)
+Membership,LEFT,leave,REJECT,leaveClub() / rejected – not a member
+Club,INITIAL,propose,PENDING,proposeClub()
+Club,PENDING,approve,APPROVED,approveClub() [admin]
+Club,PENDING,reject,REJECTED,rejectClub() [admin]
+Club,APPROVED,suspend,SUSPENDED,suspendClub() [admin]
+Club,SUSPENDED,approve,APPROVED,approveClub() [reinstate]
+Club,APPROVED,approve,REJECT,approveClub() / rejected – already APPROVED
+Club,REJECTED,approve,REJECT,approveClub() / rejected – InvalidTransition
+Club,PENDING,suspend,REJECT,suspendClub() / rejected – only APPROVED clubs can be suspended
+Club,SUSPENDED,join,REJECT,joinClub() / rejected – ClubNotAvailableException
+MealOrder,INITIAL,order,CREATED,orderMeal()
+MealOrder,CREATED,paid,PAID,payFees() = true
+MealOrder,CREATED,declined,PAYMENT_FAILED,payFees() = false
+MealOrder,PAID,cancelBeforeDeadline,CANCELLED,cancelOrder() [before deadline]
+MealOrder,PAID,serve,COMPLETED,meal served
+MealOrder,PAID,cancelAfterDeadline,REJECT,cancelOrder()  [after deadline] / rejected – CancellationDeadlinePassed
+MealOrder,CANCELLED,cancelBeforeDeadline,REJECT,cancelOrder() / rejected – already CANCELLED
+MealOrder,COMPLETED,cancelBeforeDeadline,REJECT,cancelOrder() / rejected – InvalidTransition
+Meal,INITIAL,create,AVAILABLE,manageMeals()
+Meal,AVAILABLE,soldOut,OUT_OF_STOCK,setStockStatus(OUT_OF_STOCK)
+Meal,OUT_OF_STOCK,restock,AVAILABLE,setStockStatus(AVAILABLE)
+Meal,OUT_OF_STOCK,remove,END,meal removed
+Meal,OUT_OF_STOCK,order,REJECT,orderMeal() / rejected – MealUnavailableException
+Meal,AVAILABLE,restock,AVAILABLE,"setStockStatus(AVAILABLE) / no change (idempotent, no error)"
+SupportTicket,INITIAL,submit,OPEN,submitTicket()
+SupportTicket,OPEN,reply,IN_PROGRESS,respondToTicket() [first reply]
+SupportTicket,IN_PROGRESS,reply,IN_PROGRESS,respondToTicket()
+SupportTicket,IN_PROGRESS,resolve,RESOLVED,respondToTicket(resolve)
+SupportTicket,OPEN,resolve,RESOLVED,respondToTicket(resolve)
+SupportTicket,RESOLVED,reopen,OPEN,student reopens
+SupportTicket,RESOLVED,close,END,ticket closed
+SupportTicket,RESOLVED,reply,REJECT,respondToTicket() / rejected – ticket is closed for replies
+SupportTicket,MISSING,reply,REJECT,respondToTicket(unknownId) / rejected – TicketNotFoundException
+Notification,INITIAL,send,PENDING,sendNotification()
+Notification,PENDING,delivered,SENT,sendExternalMsg() = true
+Notification,PENDING,failed,FAILED,sendExternalMsg() = false
+Notification,SENT,read,READ,viewNotifications()
+Notification,FAILED,read,REJECT,viewNotifications() as READ / rejected – InvalidTransition
+Notification,READ,send,REJECT,sendNotification() again / rejected – already delivered
+Payment,INITIAL,save,PENDING,savePayment()
+Payment,PENDING,paid,PAID,processOnlinePayment() = true
+Payment,PENDING,declined,FAILED,processOnlinePayment() = false
+Payment,PAID,refundIssued,REFUNDED,manageRefunds() [refund ISSUED]
+Payment,FAILED,refundIssued,REJECT,manageRefunds() / rejected – nothing was paid
+Payment,PENDING,refundIssued,REJECT,manageRefunds() / rejected – nothing was paid
+Payment,REFUNDED,refundIssued,REJECT,manageRefunds() / rejected – already REFUNDED
+Refund,INITIAL,request,REQUESTED,student requests refund
+Refund,REQUESTED,approve,APPROVED,admin approves
+Refund,REQUESTED,reject,REJECTED,admin rejects
+Refund,APPROVED,issued,ISSUED,processOnlineRefund() = true
+Refund,APPROVED,failed,FAILED,processOnlineRefund() = false
+Refund,REJECTED,approve,REJECT,approve / rejected – InvalidTransition
+Refund,ISSUED,approve,REJECT,approve / rejected – already ISSUED
+Refund,REQUESTED,issued,REJECT,processOnlineRefund() / rejected – must be APPROVED first
+Reservation,INITIAL,reserve,RESERVED,accessResource()
+Reservation,RESERVED,collect,COLLECTED,student collects book
+Reservation,RESERVED,cancel,CANCELLED,student cancels [copy returned]
+Reservation,RESERVED,expire,EXPIRED,not collected in time
+Reservation,COLLECTED,returnBook,RETURNED,book returned
+Reservation,EXPIRED,collect,REJECT,collect / rejected – InvalidTransition
+Reservation,CANCELLED,collect,REJECT,collect / rejected – InvalidTransition
+Reservation,RETURNED,cancel,REJECT,cancel / rejected – InvalidTransition

@@ -1,0 +1,40 @@
+name: PM2 Java quality checks
+on:
+  push:
+    branches: [pm2-devops, main, develop]
+  pull_request:
+    branches: [pm2-devops, main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: pm2-java/pom.xml
+      - name: Compile and test with coverage
+        run: mvn --batch-mode -f pm2-java/pom.xml clean verify
+      - name: Publish test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm2-java-reports
+          path: |
+            pm2-java/target/surefire-reports/
+            pm2-java/target/site/jacoco/
+      - name: Analyze and enforce SonarQube quality gate
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: scripts/pm2/quality-gate.sh
