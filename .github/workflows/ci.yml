@@ -37,4 +37,16 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: scripts/pm2/quality-gate.sh
+        run: |
+          if [ -n "$SONAR_HOST_URL" ]; then
+            scripts/pm2/quality-gate.sh
+          else
+            bash scripts/pm2/quality-gate-ci.sh
+          fi
+      - name: Publish temporary SonarQube gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm2-sonarqube-gate
+          path: pm2-java/target/sonar-quality-gate.json
+          if-no-files-found: ignore

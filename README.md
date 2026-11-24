@@ -79,3 +79,5 @@ mvn --batch-mode -f pm2-java/pom.xml clean verify
 GitHub Actions runs the build on a GitHub-hosted Ubuntu runner and uploads the Surefire and JaCoCo reports. Its [workflow](.github/workflows/ci.yml) reads `SONAR_HOST_URL` from an Actions variable and `SONAR_TOKEN` from an Actions secret. The [Jenkinsfile](Jenkinsfile) runs the same Maven build on a configured agent with Java 21, Maven and a POSIX shell. Jenkins publishes the JUnit results and archives JaCoCo coverage. Set `SONAR_HOST_URL` in the Jenkins job or agent environment and save the token as a Secret text credential with the ID `pm2-sonar-token`.
 
 Both pipelines run the same [SonarQube script](scripts/pm2/quality-gate.sh). The Maven scanner imports the JaCoCo XML report and waits for the SonarQube quality gate result. The server must be reachable from each runner or agent.
+
+When no SonarQube URL is configured, GitHub Actions starts an isolated SonarQube Community Build instance for the current checkout. Its quality gate checks at least 80% overall coverage and at most 3% duplicated lines. The job publishes the gate response as an artifact and stops the temporary instance.
