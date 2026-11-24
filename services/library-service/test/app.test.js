@@ -8,7 +8,7 @@ async function withServer(pool, fn, peers = {}) {
   try { await fn(`http://127.0.0.1:${server.address().port}`); }
   finally { await new Promise(resolve => server.close(resolve)); }
 }
-test('readiness fails on a database outage while liveness stays available', async () => {
+test('TC-LIB-001: readiness fails on a database outage while liveness stays available', async () => {
   await withServer({ query: async () => { throw new Error('private connection detail'); } }, async url => {
     assert.equal((await fetch(`${url}/health`)).status, 200);
     const response = await fetch(`${url}/ready`);
@@ -17,7 +17,7 @@ test('readiness fails on a database outage while liveness stays available', asyn
     assert.equal((await fetch(`${url}/api/items`)).status, 503);
   });
 });
-test('resource endpoint returns database results and marks them as sample data', async () => {
+test('TC-LIB-002: resource endpoint returns database results and marks them as sample data', async () => {
   await withServer({ query: async () => ({ rows: [{ id: 'sample', name: 'Example' }] }) }, async url => {
     assert.equal((await fetch(`${url}/ready`)).status, 200);
     const response = await fetch(`${url}/api/items`);
@@ -28,7 +28,7 @@ test('resource endpoint returns database results and marks them as sample data',
     assert.equal((await fetch(`${url}/unknown`)).status, 404);
   });
 });
-test('unavailable upstream produces 503', async () => {
+test('TC-LIB-003: unavailable upstream produces 503', async () => {
   await withServer({ query: async () => ({ rows: [] }) }, async url => {
     const response = await fetch(`${url}/dependencies`);
     assert.equal(response.status, 503);

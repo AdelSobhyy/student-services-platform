@@ -1,0 +1,63 @@
+
+name: Service Tests and Coverage
+
+on:
+  push:
+    branches: [main, develop, testing, 'feature/**']
+  pull_request:
+    branches: [main, develop, testing]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - accommodation-service
+          - club-service
+          - communication-service
+          - dining-service
+          - library-service
+          - payment-service
+          - transport-service
+          - user-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: npm ci
+
+      - name: Run tests
+        working-directory: services/${{ matrix.service }}
+        run: npm test
+
+      - name: Generate coverage report
+        working-directory: services/${{ matrix.service }}
+        run: npx c8 --reporter=text --reporter=html node --test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage/
+          if-no-files-found: warn
+          retention-days: 14
