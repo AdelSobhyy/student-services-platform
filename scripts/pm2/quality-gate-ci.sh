@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Scan each CI checkout in an isolated SonarQube project with overall-code conditions.
-container="pm2-sonar-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+container="pm2-sonar-$(openssl rand -hex 8)"
 image='sonarqube:26.11.0.134175-community@sha256:7b2296713a92b8ea0dd7a083a25faadc59376c9a1e6daf2744a89711c54ea1ba'
 project='student-services-pm2'
 gate='PM2 Java overall quality'
@@ -27,9 +27,15 @@ if [[ "$ready" != true ]]; then
   exit 1
 fi
 
+mask_secret() {
+  if [[ -v GITHUB_ACTIONS && $GITHUB_ACTIONS == true ]]; then
+    printf '::add-mask::%s\n' "$1"
+  fi
+}
+
 admin_password=admin
 new_password="Pm2!$(openssl rand -hex 24)"
-printf '::add-mask::%s\n' "$new_password"
+mask_secret "$new_password"
 
 sonar_api() {
   local endpoint=$1
@@ -61,7 +67,7 @@ sonar_api api/qualitygates/select --data-urlencode "projectKey=$project" \
   --data-urlencode "gateName=$gate" >/dev/null
 SONAR_TOKEN=$(sonar_api api/user_tokens/generate --data-urlencode name=pm2-ci \
   --data-urlencode type=PROJECT_ANALYSIS_TOKEN --data-urlencode "projectKey=$project" | jq -er .token)
-printf '::add-mask::%s\n' "$SONAR_TOKEN"
+mask_secret "$SONAR_TOKEN"
 export SONAR_TOKEN
 
 # This one-checkout Community Build project analyzes its snapshot as the main branch.

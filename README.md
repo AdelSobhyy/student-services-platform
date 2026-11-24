@@ -80,4 +80,4 @@ GitHub Actions runs the build on a GitHub-hosted Ubuntu runner and uploads the S
 
 Both pipelines run the same [SonarQube script](scripts/pm2/quality-gate.sh). The Maven scanner imports the JaCoCo XML report and waits for the SonarQube quality gate result. The server must be reachable from each runner or agent.
 
-When no SonarQube URL is configured, GitHub Actions starts an isolated SonarQube Community Build instance for the current checkout. Its quality gate checks at least 80% overall coverage and at most 3% duplicated lines. The job publishes the gate response as an artifact and stops the temporary instance.
+When no SonarQube URL is configured, either pipeline starts an isolated SonarQube Community Build instance for the current checkout. Its quality gate requires at least 80% overall coverage and at most 3% duplicated lines. The pipeline saves the gate response as a build artifact and stops the instance. To use this mode with Jenkins, the Linux agent needs Bash, Docker, curl, jq and OpenSSL. The agent must be able to reach the loopback port published by its Docker daemon.
