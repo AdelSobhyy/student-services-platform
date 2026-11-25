@@ -142,6 +142,17 @@ public enum Lifecycle {
   }
 
   private IllegalStateException invalid(String from, String event) {
-    return new IllegalStateException(name() + ": " + event + " rejected in " + from);
+    String message = name() + ": " + event + " rejected in " + from;
+    return switch (name() + "/" + from + "/" + event) {
+      case "User/SUSPENDED/login" -> new AccountSuspendedException();
+      case "User/DEACTIVATED/login" -> new AccountDeactivatedException();
+      case "Room/MAINTENANCE/bookLastSpace", "Room/BOOKED/bookLastSpace" ->
+          new RoomNotAvailableException();
+      case "Club/SUSPENDED/join" -> new ClubNotAvailableException();
+      case "MealOrder/PAID/cancelAfterDeadline" -> new CancellationDeadlinePassed();
+      case "Meal/OUT_OF_STOCK/order" -> new MealUnavailableException();
+      case "SupportTicket/MISSING/reply" -> new TicketNotFoundException("MISSING");
+      default -> new IllegalStateException(message);
+    };
   }
 }

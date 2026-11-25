@@ -7,6 +7,8 @@ public interface ITransportDB {
 
   void saveBooking(TransportBooking booking);
 
+  TransportBooking findBooking(String id);
+
   void updateBookingStatus(String id, String status);
 
   void saveSeatsAvailable(String id, int seats);

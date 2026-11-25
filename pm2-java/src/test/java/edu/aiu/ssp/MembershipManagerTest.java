@@ -60,4 +60,31 @@ class MembershipManagerTest {
     assertThrows(UnauthorizedStudentException.class, () -> service.joinClub(STUDENT, "C-12"));
     verifyNoInteractions(browser, db);
   }
+
+  @Test
+  void leavesAndRejoinsClub() {
+    when(account.verifyStudent(STUDENT)).thenReturn(true);
+    when(db.findMembership(STUDENT, "C-12")).thenReturn(MEMBERSHIP_ACTIVE);
+    assertTrue(service.leaveClub(STUDENT, "C-12"));
+    verify(db).saveMembership(MEMBERSHIP_LEFT);
+
+    when(db.findMembership(STUDENT, "C-12")).thenReturn(MEMBERSHIP_LEFT);
+    when(browser.getClub("C-12")).thenReturn(ROBOTICS);
+    assertTrue(service.joinClub(STUDENT, "C-12"));
+    verify(db).saveMembership(MEMBERSHIP_ACTIVE);
+  }
+
+  @Test
+  void removesLeftMembership() {
+    when(db.findMembership(STUDENT, "C-12")).thenReturn(MEMBERSHIP_LEFT);
+    assertTrue(service.removeMembership(STUDENT, "C-12"));
+    verify(db).saveMembership(new Membership("M-301", STUDENT, "C-12", "END"));
+  }
+
+  @Test
+  void cannotLeaveAClubAlreadyLeft() {
+    when(db.findMembership(STUDENT, "C-12")).thenReturn(MEMBERSHIP_LEFT);
+    assertThrows(IllegalStateException.class, () -> service.leaveClub(STUDENT, "C-12"));
+    verify(db, never()).saveMembership(any());
+  }
 }

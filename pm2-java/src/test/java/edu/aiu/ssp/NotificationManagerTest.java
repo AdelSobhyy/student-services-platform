@@ -48,4 +48,24 @@ class NotificationManagerTest {
     calls.verify(db).saveTicket(ticket);
     calls.verify(db).updateNotificationStatus("N-88", "FAILED");
   }
+
+  @Test
+  void marksSentNotificationAsRead() {
+    when(db.findNotification("N-88")).thenReturn(NOTIFICATION_SENT);
+    assertEquals("READ", service.markAsRead("N-88").status());
+    verify(db).updateNotificationStatus("N-88", "READ");
+  }
+
+  @Test
+  void failedNotificationCannotBeRead() {
+    when(db.findNotification("N-88")).thenReturn(NOTIFICATION_FAILED);
+    assertThrows(IllegalStateException.class, () -> service.markAsRead("N-88"));
+    verify(db, never()).updateNotificationStatus(anyString(), anyString());
+  }
+
+  @Test
+  void unknownNotificationCannotBeRead() {
+    assertThrows(ValidationException.class, () -> service.markAsRead("N-404"));
+    verify(db).findNotification("N-404");
+  }
 }

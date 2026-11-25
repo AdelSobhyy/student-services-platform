@@ -73,6 +73,9 @@ export SONAR_TOKEN
 # This one-checkout Community Build project analyzes its snapshot as the main branch.
 scan_result=0
 scripts/pm2/quality-gate.sh || scan_result=$?
-sonar_api "api/qualitygates/project_status?projectKey=$project" |
-  jq . | tee pm2-java/target/sonar-quality-gate.json
-exit "$scan_result"
+verify_result=0
+bash scripts/pm2/verify-quality-gate.sh || verify_result=$?
+if (( scan_result != 0 || verify_result != 0 )); then
+  echo 'PM2 Java quality gate failed.' >&2
+  exit 1
+fi

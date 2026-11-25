@@ -1,3 +1,3 @@
 package edu.aiu.ssp;
 
-public class ClubNotAvailableException extends RuntimeException {}
+public class ClubNotAvailableException extends IllegalStateException {}

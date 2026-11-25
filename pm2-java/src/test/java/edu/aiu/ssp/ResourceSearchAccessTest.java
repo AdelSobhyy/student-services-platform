@@ -66,4 +66,31 @@ class ResourceSearchAccessTest {
         UnauthorizedStudentException.class, () -> service.accessResource("L-300", STUDENT));
     verifyNoInteractions(catalog, db);
   }
+
+  @Test
+  void collectsCancelsExpiresAndReturnsReservations() {
+    when(db.findReservation("RS-12"))
+        .thenReturn(
+            RESERVATION_RESERVED,
+            RESERVATION_RESERVED,
+            RESERVATION_RESERVED,
+            RESERVATION_COLLECTED);
+    assertEquals("COLLECTED", service.collectReservation("RS-12").status());
+    assertEquals("CANCELLED", service.cancelReservation("RS-12").status());
+    assertEquals("EXPIRED", service.expireReservation("RS-12").status());
+    assertEquals("RETURNED", service.returnBook("RS-12").status());
+    verify(db).updateReservationStatus("RS-12", "COLLECTED");
+    verify(db).updateReservationStatus("RS-12", "CANCELLED");
+    verify(db).updateReservationStatus("RS-12", "EXPIRED");
+    verify(db).updateReservationStatus("RS-12", "RETURNED");
+    verify(db, times(2)).updateCopies("L-300", 1);
+  }
+
+  @Test
+  void expiredReservationCannotBeCollected() {
+    when(db.findReservation("RS-12"))
+        .thenReturn(new Reservation("RS-12", STUDENT, "L-300", "EXPIRED"));
+    assertThrows(IllegalStateException.class, () -> service.collectReservation("RS-12"));
+    verify(db, never()).updateReservationStatus(anyString(), anyString());
+  }
 }

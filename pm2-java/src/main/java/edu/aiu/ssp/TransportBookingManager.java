@@ -27,8 +27,30 @@ public record TransportBookingManager(
     db.updateBookingStatus(result.id(), result.status());
     if (paid) {
       routes.updateSeatsAvailable(schedule, -1);
-      comm.sendNotification(studentId, "Seat " + result.seatNumber() + " confirmed");
+      comm.sendNotification(studentId, "Seat " + booking.seatNumber() + " confirmed");
     }
+    return result;
+  }
+
+  /** CONFIRMED -> CANCELLED; releases the reserved seat and notifies the student. */
+  public TransportBooking cancelBooking(String bookingId) {
+    TransportBooking current = db.findBooking(bookingId);
+    if (current == null) throw new ValidationException();
+    TransportBooking result = current.after("cancel");
+    db.updateBookingStatus(result.id(), result.status());
+    RouteSchedule schedule = routes.getSchedule(current.scheduleId());
+    if (schedule != null) routes.updateSeatsAvailable(schedule, 1);
+    comm.sendNotification(current.studentId(), "Seat " + result.seatNumber() + " released");
+    return result;
+  }
+
+  /** CONFIRMED -> COMPLETED when the trip date passes. */
+  public TransportBooking complete(String bookingId) {
+    TransportBooking current = db.findBooking(bookingId);
+    if (current == null) throw new ValidationException();
+    TransportBooking result = current.after("complete");
+    db.updateBookingStatus(result.id(), result.status());
+    comm.sendNotification(current.studentId(), "Trip " + result.id() + " completed");
     return result;
   }
 }

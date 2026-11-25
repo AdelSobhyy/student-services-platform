@@ -32,4 +32,16 @@ public record FeePaymentProcessor(
     comm.sendNotification(studentId, "Payment " + result.id() + ": " + result.status());
     return result;
   }
+
+  /** PAID -> REFUNDED after the gateway confirms the refund (FR24.2). */
+  public Payment issueRefund(String paymentId) {
+    Payment payment = db.findPayment(paymentId);
+    if (payment == null) throw new ValidationException();
+    if (!"PAID".equals(payment.status())) throw new InvalidStateException();
+    if (!gateway.processOnlineRefund(payment.id())) throw new InvalidStateException();
+    Payment result = payment.after("refundIssued");
+    db.updatePaymentStatus(result.id(), result.status());
+    comm.sendNotification(result.studentId(), "Payment " + result.id() + " refunded");
+    return result;
+  }
 }

@@ -64,4 +64,33 @@ class TransportBookingManagerTest {
     assertThrows(NoSeatAvailableException.class, () -> service.bookSeat(STUDENT, "SCH-77"));
     verifyNoInteractions(db, payment, comm);
   }
+
+  @Test
+  void cancelReleasesSeatAndNotifies() {
+    when(db.findBooking("TB-9001")).thenReturn(TRANSPORT_CONFIRMED);
+    when(routes.getSchedule("SCH-77")).thenReturn(schedule(11));
+    assertEquals("CANCELLED", service.cancelBooking("TB-9001").status());
+    InOrder calls = inOrder(db, routes, comm);
+    calls.verify(db).updateBookingStatus("TB-9001", "CANCELLED");
+    calls.verify(routes).getSchedule("SCH-77");
+    calls.verify(routes).updateSeatsAvailable(schedule(11), 1);
+    calls.verify(comm).sendNotification(STUDENT, "Seat 29 released");
+  }
+
+  @Test
+  void cancelledTripCannotBeCancelledAgain() {
+    when(db.findBooking("TB-9001"))
+        .thenReturn(new TransportBooking("TB-9001", STUDENT, "SCH-77", 29, FARE, "CANCELLED"));
+    assertThrows(IllegalStateException.class, () -> service.cancelBooking("TB-9001"));
+    verify(db, never()).updateBookingStatus(anyString(), anyString());
+    verifyNoInteractions(routes, comm);
+  }
+
+  @Test
+  void completeFinishesTrip() {
+    when(db.findBooking("TB-9001")).thenReturn(TRANSPORT_CONFIRMED);
+    assertEquals("COMPLETED", service.complete("TB-9001").status());
+    verify(db).updateBookingStatus("TB-9001", "COMPLETED");
+    verify(comm).sendNotification(STUDENT, "Trip TB-9001 completed");
+  }
 }

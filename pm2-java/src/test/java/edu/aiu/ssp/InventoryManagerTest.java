@@ -37,4 +37,32 @@ class InventoryManagerTest {
   void checkoutMustFollowCheckin() {
     assertThrows(ValidationException.class, () -> new Dates(DATES.checkIn(), DATES.checkIn()));
   }
+
+  @Test
+  void createsAndTransitionsRoomsThroughDiagram() {
+    Room created = service.createRoom("R-205", "B-205", 2, 2, FEE);
+    assertEquals("AVAILABLE", created.status());
+    verify(db).saveRoom(created);
+
+    when(db.findRoom("R-204")).thenReturn(ROOM, ROOM_BOOKED, ROOM_MAINTENANCE);
+    assertEquals("MAINTENANCE", service.markForMaintenance("R-204").status());
+    assertEquals("AVAILABLE", service.releaseRoom("R-204").status());
+    assertEquals("AVAILABLE", service.restoreRoom("R-204").status());
+    verify(db).updateRoomStatus("R-204", "MAINTENANCE");
+    verify(db, times(2)).updateRoomStatus("R-204", "AVAILABLE");
+  }
+
+  @Test
+  void removedRoomReachesEnd() {
+    when(db.findRoom("R-204")).thenReturn(ROOM);
+    assertEquals("END", service.removeRoom("R-204").status());
+    verify(db).updateRoomStatus("R-204", "END");
+  }
+
+  @Test
+  void invalidRoomTransitionIsRejected() {
+    when(db.findRoom("R-204")).thenReturn(ROOM_BOOKED);
+    assertThrows(IllegalStateException.class, () -> service.markForMaintenance("R-204"));
+    verify(db, never()).updateRoomStatus(anyString(), anyString());
+  }
 }

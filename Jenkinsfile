@@ -4,6 +4,9 @@ pipeline {
         skipDefaultCheckout(true)
         timeout(time: 20, unit: 'MINUTES')
     }
+    environment {
+        SONAR_PROJECT_KEY = 'student-services-pm2'
+    }
     stages {
         stage('Checkout') {
             steps { checkout scm }
@@ -13,11 +16,11 @@ pipeline {
             post {
                 always {
                     junit testResults: 'pm2-java/target/surefire-reports/TEST-*.xml', allowEmptyResults: true
-                    archiveArtifacts artifacts: 'pm2-java/target/site/jacoco/**', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'pm2-java/target/surefire-reports/**, pm2-java/target/site/jacoco/**', allowEmptyArchive: true
                 }
             }
         }
-        stage('SonarQube quality gate') {
+        stage('Analyze and enforce SonarQube quality gate') {
             steps {
                 script {
                     if (env.SONAR_HOST_URL?.trim()) {

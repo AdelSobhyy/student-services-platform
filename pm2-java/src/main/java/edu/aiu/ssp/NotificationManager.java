@@ -20,4 +20,13 @@ public record NotificationManager(
     db.updateNotificationStatus(result.id(), result.status());
     return result;
   }
+
+  /** SENT -> READ when a student views the notification; FAILED/READ cannot be read again. */
+  public Notification markAsRead(String notificationId) {
+    Notification notification = db.findNotification(notificationId);
+    if (notification == null) throw new ValidationException();
+    Notification result = notification.after("read");
+    db.updateNotificationStatus(notification.id(), result.status());
+    return result;
+  }
 }

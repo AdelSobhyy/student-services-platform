@@ -32,4 +32,25 @@ public record MealOrderManager(
     if (paid) comm.sendNotification(studentId, "Order " + result.id() + " paid");
     return result;
   }
+
+  /** PAID -> CANCELLED before the cancellation deadline (FR16.2). */
+  public MealOrder cancelOrder(String orderId, boolean beforeDeadline) {
+    if (!beforeDeadline) throw new CancellationDeadlinePassed();
+    MealOrder current = db.findOrder(orderId);
+    if (current == null) throw new ValidationException();
+    MealOrder result = current.after("cancelBeforeDeadline");
+    db.updateOrderStatus(result.id(), result.status());
+    comm.sendNotification(current.studentId(), "Order " + result.id() + " cancelled");
+    return result;
+  }
+
+  /** PAID -> COMPLETED when the meal is served. */
+  public MealOrder serveOrder(String orderId) {
+    MealOrder current = db.findOrder(orderId);
+    if (current == null) throw new ValidationException();
+    MealOrder result = current.after("serve");
+    db.updateOrderStatus(result.id(), result.status());
+    comm.sendNotification(current.studentId(), "Order " + result.id() + " served");
+    return result;
+  }
 }

@@ -31,4 +31,25 @@ public record BookingManager(
     }
     return result;
   }
+
+  /** CONFIRMED/PENDING -> CANCELLED; restores room availability and notifies the student. */
+  public Booking cancelBooking(String bookingId) {
+    Booking current = db.findBooking(bookingId);
+    if (current == null) throw new ValidationException();
+    Booking result = current.after("cancel");
+    db.updateBookingStatus(result.id(), result.status());
+    inventory.updateAvailability(current.roomId(), "AVAILABLE");
+    comm.sendNotification(current.studentId(), "Booking " + result.id() + " cancelled");
+    return result;
+  }
+
+  /** CONFIRMED -> COMPLETED when the check-out date is reached. */
+  public Booking checkout(String bookingId) {
+    Booking current = db.findBooking(bookingId);
+    if (current == null) throw new ValidationException();
+    Booking result = current.after("checkout");
+    db.updateBookingStatus(result.id(), result.status());
+    comm.sendNotification(current.studentId(), "Booking " + result.id() + " completed");
+    return result;
+  }
 }

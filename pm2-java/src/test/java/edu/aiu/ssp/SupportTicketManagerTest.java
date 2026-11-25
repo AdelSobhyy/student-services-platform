@@ -44,4 +44,42 @@ class SupportTicketManagerTest {
     assertThrows(ValidationException.class, () -> service.submitTicket(STUDENT, SUBJECT, " "));
     verifyNoInteractions(db, notifier);
   }
+
+  @Test
+  void repliesAndResolvesTicketThroughDiagram() {
+    when(db.findTicket("T-401")).thenReturn(TICKET_OPEN, TICKET_IN_PROGRESS);
+    assertEquals(
+        "IN_PROGRESS", service.respondToTicket("T-401", "We are checking", false).status());
+    assertEquals("RESOLVED", service.respondToTicket("T-401", "Fixed", true).status());
+    InOrder calls = inOrder(db);
+    calls.verify(db).saveTicketResponse("T-401", "We are checking");
+    calls.verify(db).updateTicketStatus("T-401", "IN_PROGRESS");
+    calls.verify(db).saveTicketResponse("T-401", "Fixed");
+    calls.verify(db).updateTicketStatus("T-401", "RESOLVED");
+  }
+
+  @Test
+  void reopensAndClosesResolvedTicket() {
+    when(db.findTicket("T-401")).thenReturn(TICKET_RESOLVED);
+    assertEquals("OPEN", service.reopenTicket("T-401").status());
+    assertEquals("END", service.closeTicket("T-401").status());
+    verify(db).updateTicketStatus("T-401", "OPEN");
+    verify(db).updateTicketStatus("T-401", "END");
+  }
+
+  @Test
+  void resolvedTicketRejectsReplies() {
+    when(db.findTicket("T-401")).thenReturn(TICKET_RESOLVED);
+    assertThrows(
+        IllegalStateException.class, () -> service.respondToTicket("T-401", "again", false));
+    verify(db, never()).saveTicketResponse(anyString(), anyString());
+  }
+
+  @Test
+  void unknownTicketIsReported() {
+    assertThrows(
+        TicketNotFoundException.class,
+        () -> service.respondToTicket("MISSING", "Hello", false));
+    verify(db, never()).saveTicketResponse(anyString(), anyString());
+  }
 }
