@@ -23,7 +23,7 @@ services:
       - user-db-data:/var/lib/postgresql/data
       - ./services/user-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d user"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U user -d user"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -62,7 +62,7 @@ services:
       - accommodation-db-data:/var/lib/postgresql/data
       - ./services/accommodation-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U accommodation -d accommodation"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U accommodation -d accommodation"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -95,7 +95,7 @@ services:
       - transport-db-data:/var/lib/postgresql/data
       - ./services/transport-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U transport -d transport"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U transport -d transport"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -128,7 +128,7 @@ services:
       - club-db-data:/var/lib/postgresql/data
       - ./services/club-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U club -d club"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U club -d club"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -161,7 +161,7 @@ services:
       - dining-db-data:/var/lib/postgresql/data
       - ./services/dining-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dining -d dining"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U dining -d dining"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -194,7 +194,7 @@ services:
       - communication-db-data:/var/lib/postgresql/data
       - ./services/communication-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U communication -d communication"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U communication -d communication"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -227,7 +227,7 @@ services:
       - library-db-data:/var/lib/postgresql/data
       - ./services/library-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U library -d library"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U library -d library"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -260,7 +260,7 @@ services:
       - payment-db-data:/var/lib/postgresql/data
       - ./services/payment-service/db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U payment -d payment"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U payment -d payment"]
       interval: 5s
       timeout: 3s
       retries: 20
