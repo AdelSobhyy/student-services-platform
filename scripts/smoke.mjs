@@ -66,6 +66,12 @@ const registration = await request('user', '/api/auth/register', {
 });
 const token = registration.token;
 assert(token, 'registration did not return a token');
+const adminLogin = await request('user', '/api/auth/login', {
+  method: 'POST',
+  body: { email: 'admin@campus.edu', password: 'Admin123!' },
+});
+const adminToken = adminLogin.token;
+assert(adminToken, 'seeded admin login failed');
 const profile = await request('user', '/api/users/me', { token });
 assert(profile.user.email === email, 'profile email mismatch');
 await request('user', '/api/users/me', {
@@ -129,9 +135,20 @@ assert(left.membership.status === 'LEFT', 'club leave failed');
 console.log('PASS club: browse, join, leave');
 
 // FR15/FR16/FR18: menu, dietary preferences, conflicts, order and cancel.
-const meals = await request('dining', '/api/meals');
-assert(meals.items.length > 0, 'no meals returned');
-const meal = meals.items.find((item) => item.stockStatus === 'AVAILABLE') || meals.items[0];
+const futureMealDate = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+const createdMeal = await request('dining', '/api/admin/meals', {
+  method: 'POST',
+  token: adminToken,
+  body: {
+    name: `Smoke Meal ${Date.now()}`,
+    price: 9.5,
+    mealDate: futureMealDate,
+    ingredients: ['rice', 'chicken'],
+    nutrition: ['calories:550'],
+    allergens: [],
+  },
+});
+const meal = createdMeal.meal;
 await request('dining', '/api/dietary', {
   method: 'PUT',
   token,
@@ -204,12 +221,7 @@ const refund = await request('payment', '/api/refunds', {
 assert(refund.refund.status === 'REQUESTED', 'refund was not requested');
 console.log('PASS payment: pay, receipt, refund request');
 
-// Admin flows: login as seeded admin, inspect users and analytics.
-const adminLogin = await request('user', '/api/auth/login', {
-  method: 'POST',
-  body: { email: 'admin@campus.edu', password: 'Admin123!' },
-});
-const adminToken = adminLogin.token;
+// Admin flows: inspect users and analytics with the seeded admin token.
 const users = await request('user', '/api/admin/users', { token: adminToken });
 assert(users.items.length >= 4, 'seeded users missing');
 const analytics = await request('communication', '/api/admin/analytics/summary', {

@@ -46,7 +46,7 @@ function setup() {
   });
 }
 
-test('delivers, lists and marks notifications as read', async () => {
+test('TC6.1 TC6.2 delivers, lists and marks notifications as read', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -99,7 +99,7 @@ test('delivers, lists and marks notifications as read', async () => {
   }
 });
 
-test('submits, responds to and resolves support tickets', async () => {
+test('TC6.3 TC6.4 submits, responds to and resolves support tickets', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -152,7 +152,7 @@ test('submits, responds to and resolves support tickets', async () => {
   }
 });
 
-test('builds analytics summaries and CSV club reports', async () => {
+test('TC6.5 TC6.6 builds analytics summaries and CSV club reports', async () => {
   const app = await setup();
   try {
     const denied = await call(app.base, '/api/admin/analytics/summary', {
@@ -180,7 +180,7 @@ test('builds analytics summaries and CSV club reports', async () => {
   }
 });
 
-test('manages semester settings and announcements', async () => {
+test('TC6.7 TC6.8 TC6.9 manages semester settings and announcements', async () => {
   const app = await setup();
   try {
     const initial = await call(app.base, '/api/settings/semester');

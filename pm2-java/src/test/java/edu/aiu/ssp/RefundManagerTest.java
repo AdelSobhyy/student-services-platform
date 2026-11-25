@@ -20,7 +20,7 @@ class RefundManagerTest {
   @InjectMocks RefundManager service;
 
   @Test
-  void studentRequestsRefund() {
+  void TC8_3_studentRequestsRefund() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(db.findPayment("P-9001")).thenReturn(PAYMENT_PAID);
     when(ids.next("refund")).thenReturn("RF-1");
@@ -43,7 +43,7 @@ class RefundManagerTest {
   }
 
   @Test
-  void approvedRefundIsIssuedThroughGateway() {
+  void TC8_4_approvedRefundIsIssuedThroughGateway() {
     when(account.verifyRole(ADMIN, "ADMIN")).thenReturn(true);
     when(db.findRefund("RF-1")).thenReturn(REFUND_APPROVED);
     when(gateway.refund("RF-1")).thenReturn("GW-77");

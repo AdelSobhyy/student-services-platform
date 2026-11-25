@@ -16,7 +16,7 @@ class InventoryManagerTest {
   @InjectMocks InventoryManager service;
 
   @Test
-  void readsAvailableRoomAndPersistsBookedStatus() {
+  void TC2_1_readsAvailableRoomAndPersistsBookedStatus() {
     when(db.findRoom("R-204")).thenReturn(ROOM);
     assertEquals(ROOM, service.isAvailable("R-204", DATES));
     service.updateAvailability("R-204", "BOOKED");
@@ -39,7 +39,7 @@ class InventoryManagerTest {
   }
 
   @Test
-  void createsAndTransitionsRoomsThroughDiagram() {
+  void TC2_6_TC2_7_createsAndTransitionsRoomsThroughDiagram() {
     Room created = service.createRoom("R-205", "B-205", 2, 2, FEE);
     assertEquals("AVAILABLE", created.status());
     verify(db).saveRoom(created);

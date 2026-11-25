@@ -19,7 +19,7 @@ class ClubApprovalManagerTest {
   @InjectMocks ClubApprovalManager service;
 
   @Test
-  void adminApprovesPhotographyClub() {
+  void TC4_9_adminApprovesPhotographyClub() {
     when(account.verifyRole("admin", "ADMIN")).thenReturn(true);
     when(db.findClub("C-15"))
         .thenReturn(new Club("C-15", "Photography Club", "Arts", "S-215", "PENDING"));
@@ -61,7 +61,7 @@ class ClubApprovalManagerTest {
   }
 
   @Test
-  void adminSuspendsApprovedClubAndReinstatesSuspendedClub() {
+  void TC4_10_adminSuspendsApprovedClubAndReinstatesSuspendedClub() {
     when(account.verifyRole(ADMIN, "ADMIN")).thenReturn(true);
     when(db.findClub("C-12")).thenReturn(ROBOTICS, ROBOTICS_SUSPENDED);
     service.suspendClub(ADMIN, "C-12");

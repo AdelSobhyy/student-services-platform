@@ -23,7 +23,7 @@ class FeePaymentProcessorTest {
   @InjectMocks FeePaymentProcessor service;
 
   @Test
-  void paysHousingFeeAndIssuesReceipt() {
+  void TC8_1_paysHousingFeeAndIssuesReceipt() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(ids.next("payment")).thenReturn("P-9001");
     when(clock.instant()).thenReturn(Instant.parse("2026-09-10T00:00:00Z"));
@@ -47,7 +47,7 @@ class FeePaymentProcessorTest {
   }
 
   @Test
-  void declineNotifiesWithoutReceipt() {
+  void TC8_2_declineNotifiesWithoutReceipt() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(ids.next("payment")).thenReturn("P-9001");
     assertEquals("FAILED", service.payFees(STUDENT, "HOUSING", "B-5001", FEE).status());

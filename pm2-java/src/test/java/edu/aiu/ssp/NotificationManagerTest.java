@@ -19,7 +19,7 @@ class NotificationManagerTest {
   @InjectMocks NotificationManager service;
 
   @Test
-  void deliversTicketEmail() {
+  void TC6_1_deliversTicketEmail() {
     String title = "Ticket T-401 received";
     when(ids.next("notification")).thenReturn("N-88");
     when(account.getUserEmail(STUDENT)).thenReturn("s103@student.edu");
@@ -50,7 +50,7 @@ class NotificationManagerTest {
   }
 
   @Test
-  void marksSentNotificationAsRead() {
+  void TC6_2_marksSentNotificationAsRead() {
     when(db.findNotification("N-88")).thenReturn(NOTIFICATION_SENT);
     assertEquals("READ", service.markAsRead("N-88").status());
     verify(db).updateNotificationStatus("N-88", "READ");

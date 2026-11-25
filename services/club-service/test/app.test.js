@@ -19,7 +19,7 @@ function setup() {
   });
 }
 
-test('browses and filters approved clubs', async () => {
+test('TC4.1 TC4.2 browses and filters approved clubs', async () => {
   const app = await setup();
   try {
     const clubs = await call(app.base, '/api/clubs');
@@ -47,7 +47,7 @@ test('browses and filters approved clubs', async () => {
   }
 });
 
-test('proposes, approves, joins and leaves a club', async () => {
+test('TC4.3 TC4.4 TC4.6 TC4.9 proposes, approves, joins and leaves a club', async () => {
   const app = await setup();
   const student = makeToken();
   try {
@@ -103,7 +103,7 @@ test('proposes, approves, joins and leaves a club', async () => {
   }
 });
 
-test('manages club events and restricts membership lists', async () => {
+test('TC4.7 TC4.8 manages club events and restricts membership lists', async () => {
   const app = await setup();
   const admin = adminToken();
   try {
@@ -164,7 +164,7 @@ test('manages club events and restricts membership lists', async () => {
   }
 });
 
-test('admin rejects and suspends clubs', async () => {
+test('TC4.5 TC4.10 admin rejects and suspends clubs', async () => {
   const app = await setup();
   const admin = adminToken();
   try {

@@ -43,7 +43,7 @@ async function createMeal(app, overrides = {}) {
   return response.body.meal;
 }
 
-test('browses menus and meal details', async () => {
+test('TC5.1 TC5.2 browses menus and meal details', async () => {
   const app = await setup();
   try {
     const meals = await call(app.base, '/api/meals');
@@ -66,7 +66,7 @@ test('browses menus and meal details', async () => {
   }
 });
 
-test('saves dietary preferences and highlights conflicts', async () => {
+test('TC5.9 TC5.10 saves dietary preferences and highlights conflicts', async () => {
   const app = await setup();
   try {
     const meal = await createMeal(app, {
@@ -102,7 +102,7 @@ test('saves dietary preferences and highlights conflicts', async () => {
   }
 });
 
-test('orders a meal and cancels before the deadline', async () => {
+test('TC5.3 TC5.4 TC5.5 TC5.6 orders a meal and cancels before the deadline', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -142,7 +142,7 @@ test('orders a meal and cancels before the deadline', async () => {
   }
 });
 
-test('admin manages meals and stock while students are denied', async () => {
+test('TC5.7 TC5.8 admin manages meals and stock while students are denied', async () => {
   const app = await setup();
   try {
     const denied = await call(app.base, '/api/admin/meals', {
