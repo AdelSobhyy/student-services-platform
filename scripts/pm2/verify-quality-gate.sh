@@ -6,7 +6,7 @@ set -euo pipefail
 : "${SONAR_HOST_URL:?Set SONAR_HOST_URL to a server reachable from this runner}"
 : "${SONAR_TOKEN:?Supply a project analysis token through CI credentials}"
 
-project="${SONAR_PROJECT_KEY:-student-services-pm2}"
+project="${SONAR_PROJECT_KEY:-student-services-platform999998888889999988}"
 report="pm2-java/target/sonar-quality-gate.json"
 mkdir -p "$(dirname "$report")"
 

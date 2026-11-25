@@ -5,7 +5,7 @@ pipeline {
         timeout(time: 20, unit: 'MINUTES')
     }
     environment {
-        SONAR_PROJECT_KEY = 'student-services-pm2'
+        SONAR_PROJECT_KEY = 'student-services-platform999998888889999988'
     }
     stages {
         stage('Checkout') {
