@@ -16,7 +16,7 @@ class RouteManagerTest {
   @InjectMocks RouteManager service;
 
   @Test
-  void persistsElevenRemainingSeats() {
+  void TC3_3_persistsElevenRemainingSeats() {
     when(db.findSchedule("SCH-77")).thenReturn(schedule(12));
     RouteSchedule before = service.getSchedule("SCH-77");
     service.updateSeatsAvailable(before, -1);
@@ -26,7 +26,7 @@ class RouteManagerTest {
   }
 
   @Test
-  void preventsNegativeCapacity() {
+  void TC3_4_preventsNegativeCapacity() {
     assertThrows(
         NoSeatAvailableException.class, () -> service.updateSeatsAvailable(schedule(0), -1));
     verifyNoInteractions(db);

@@ -23,7 +23,7 @@ function setup() {
   return harness({ schemaUrl, createApp, ensureSeedData, config, fetchImpl: upstream() });
 }
 
-test('browses and filters accommodation catalogue', async () => {
+test('TC2.1 TC2.2 browses and filters accommodation catalogue', async () => {
   const app = await setup();
   try {
     const buildings = await call(app.base, '/api/buildings');
@@ -58,7 +58,7 @@ test('browses and filters accommodation catalogue', async () => {
   }
 });
 
-test('books, rejects overlaps, lists and cancels a room', async () => {
+test('TC2.3 TC2.4 TC2.5 books, rejects overlaps, lists and cancels a room', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -107,7 +107,7 @@ test('books, rejects overlaps, lists and cancels a room', async () => {
   }
 });
 
-test('requires a completed stay before accepting a review', async () => {
+test('TC2.8 TC2.9 TC2.10 requires a completed stay before accepting a review', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -147,7 +147,7 @@ test('requires a completed stay before accepting a review', async () => {
   }
 });
 
-test('admin manages buildings and room availability while students are denied', async () => {
+test('TC2.6 TC2.7 admin manages buildings and room availability while students are denied', async () => {
   const app = await setup();
   try {
     const forbidden = await call(app.base, '/api/admin/buildings', {

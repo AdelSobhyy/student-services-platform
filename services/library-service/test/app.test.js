@@ -13,7 +13,7 @@ function setup() {
   return harness({ schemaUrl, createApp, ensureSeedData, config });
 }
 
-test('searches and filters the library catalogue', async () => {
+test('TC7.1 searches and filters the library catalogue', async () => {
   const app = await setup();
   try {
     const resources = await call(app.base, '/api/resources');
@@ -42,7 +42,7 @@ test('searches and filters the library catalogue', async () => {
   }
 });
 
-test('logs digital downloads', async () => {
+test('TC7.3 logs digital downloads', async () => {
   const app = await setup();
   try {
     const resources = await call(app.base, '/api/resources?type=DIGITAL');
@@ -65,7 +65,7 @@ test('logs digital downloads', async () => {
   }
 });
 
-test('reserves, collects, cancels and returns printed resources', async () => {
+test('TC7.2 reserves, collects, cancels and returns printed resources', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -152,7 +152,7 @@ test('reserves, collects, cancels and returns printed resources', async () => {
   }
 });
 
-test('admin manages the catalogue while students are denied', async () => {
+test('TC7.4 admin manages the catalogue while students are denied', async () => {
   const app = await setup();
   try {
     const denied = await call(app.base, '/api/admin/resources', {

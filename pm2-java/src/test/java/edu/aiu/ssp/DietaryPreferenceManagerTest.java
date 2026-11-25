@@ -17,7 +17,7 @@ class DietaryPreferenceManagerTest {
   @InjectMocks DietaryPreferenceManager service;
 
   @Test
-  void peanutIngredientConflictsWithSavedAllergy() {
+  void TC5_10_peanutIngredientConflictsWithSavedAllergy() {
     when(db.findMeal("M-71")).thenReturn(NOODLES);
     when(db.findDietaryPreferences(STUDENT)).thenReturn(List.of(ALLERGY));
     assertEquals(List.of(ALLERGY), service.highlightConflicts(STUDENT, "M-71"));

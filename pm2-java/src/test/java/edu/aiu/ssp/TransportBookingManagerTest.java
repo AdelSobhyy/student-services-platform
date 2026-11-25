@@ -21,7 +21,7 @@ class TransportBookingManagerTest {
   @InjectMocks TransportBookingManager service;
 
   @Test
-  void confirmsPaidBookingInDiagramOrder() {
+  void TC3_3_confirmsPaidBookingInDiagramOrder() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(routes.getSchedule("SCH-77")).thenReturn(schedule(12));
     when(ids.next("transport")).thenReturn("TB-9001");
@@ -58,7 +58,7 @@ class TransportBookingManagerTest {
   }
 
   @Test
-  void unavailableInventoryRejectsBooking() {
+  void TC2_4_unavailableInventoryRejectsBooking() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(routes.getSchedule("SCH-77")).thenReturn(schedule(0));
     assertThrows(NoSeatAvailableException.class, () -> service.bookSeat(STUDENT, "SCH-77"));
@@ -66,7 +66,7 @@ class TransportBookingManagerTest {
   }
 
   @Test
-  void cancelReleasesSeatAndNotifies() {
+  void TC3_5_cancelReleasesSeatAndNotifies() {
     when(db.findBooking("TB-9001")).thenReturn(TRANSPORT_CONFIRMED);
     when(routes.getSchedule("SCH-77")).thenReturn(schedule(11));
     assertEquals("CANCELLED", service.cancelBooking("TB-9001").status());

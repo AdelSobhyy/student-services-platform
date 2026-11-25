@@ -21,7 +21,7 @@ class BookingManagerTest {
   @InjectMocks BookingManager service;
 
   @Test
-  void confirmsPaidBookingInDiagramOrder() {
+  void TC2_3_confirmsPaidBookingInDiagramOrder() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(inventory.isAvailable("R-204", DATES)).thenReturn(ROOM);
     when(ids.next("booking")).thenReturn("B-5001");
@@ -58,14 +58,14 @@ class BookingManagerTest {
   }
 
   @Test
-  void unavailableInventoryRejectsBooking() {
+  void TC2_4_unavailableInventoryRejectsBooking() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     assertThrows(RoomNotAvailableException.class, () -> service.bookRoom(STUDENT, "R-204", DATES));
     verifyNoInteractions(db, payment, comm);
   }
 
   @Test
-  void cancelsConfirmedAndPendingBookings() {
+  void TC2_5_cancelsConfirmedAndPendingBookings() {
     when(db.findBooking("B-1")).thenReturn(BOOKING_CONFIRMED);
     when(db.findBooking("B-2"))
         .thenReturn(new Booking("B-2", STUDENT, "R-204", DATES, FEE, "PENDING"));

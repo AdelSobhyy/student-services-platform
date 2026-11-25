@@ -16,21 +16,21 @@ class GatewayAdapterTest {
   @InjectMocks GatewayAdapter service;
 
   @Test
-  void chargesExternalGateway() {
+  void TC8_1_chargesExternalGateway() {
     when(externalGW.charge("P-9001", FEE)).thenReturn("TXN-8841");
     assertTrue(service.processOnlinePayment("P-9001", FEE));
     verify(externalGW).charge("P-9001", FEE);
   }
 
   @Test
-  void declinedChargeCallsGateway() {
+  void TC8_2_declinedChargeCallsGateway() {
     when(externalGW.charge("P-9001", FEE)).thenReturn("   ");
     assertFalse(service.processOnlinePayment("P-9001", FEE));
     verify(externalGW).charge("P-9001", FEE);
   }
 
   @Test
-  void refundCallsGatewayAndHandlesFailure() {
+  void TC8_4_refundCallsGatewayAndHandlesFailure() {
     when(externalGW.refund("P-9001")).thenReturn("RF-1", "   ");
     assertTrue(service.processOnlineRefund("P-9001"));
     assertFalse(service.processOnlineRefund("P-9001"));

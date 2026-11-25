@@ -16,7 +16,7 @@ class CatalogManagerTest {
   @InjectMocks CatalogManager service;
 
   @Test
-  void readsCleanCodeFromCatalog() {
+  void TC7_1_readsCleanCodeFromCatalog() {
     when(db.findResourceById("L-300")).thenReturn(book(2));
     assertEquals(book(2), service.getResource("L-300"));
     verify(db).findResourceById("L-300");

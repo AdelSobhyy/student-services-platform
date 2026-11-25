@@ -19,7 +19,7 @@ class ResourceSearchAccessTest {
   @InjectMocks ResourceSearchAccess service;
 
   @Test
-  void reservesCleanCodeAndReturnsRemainingCopy() {
+  void TC7_2_reservesCleanCodeAndReturnsRemainingCopy() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(catalog.getResource("L-300")).thenReturn(book(2));
     when(ids.next("reservation")).thenReturn("RS-12");
@@ -51,7 +51,7 @@ class ResourceSearchAccessTest {
   }
 
   @Test
-  void digitalDownload() {
+  void TC7_3_digitalDownload() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     Resource digital = new Resource("L-301", "DIGITAL", "Clean Code", 0, true);
     when(catalog.getResource("L-301")).thenReturn(digital);

@@ -20,7 +20,7 @@ class MembershipManagerTest {
   @InjectMocks MembershipManager service;
 
   @Test
-  void joinsApprovedRoboticsClub() {
+  void TC4_3_joinsApprovedRoboticsClub() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(browser.getClub("C-12")).thenReturn(ROBOTICS);
     when(ids.next("membership")).thenReturn("M-301");
@@ -35,7 +35,7 @@ class MembershipManagerTest {
   }
 
   @Test
-  void activeMemberCannotJoinTwice() {
+  void TC4_4_activeMemberCannotJoinTwice() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(browser.getClub("C-12")).thenReturn(ROBOTICS);
     when(db.findMembership(STUDENT, "C-12"))
@@ -45,7 +45,7 @@ class MembershipManagerTest {
   }
 
   @Test
-  void pendingAndSuspendedClubsRejectMembership() {
+  void TC4_5_pendingAndSuspendedClubsRejectMembership() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     for (String state : List.of("PENDING", "SUSPENDED")) {
       when(browser.getClub("C-12"))
@@ -62,7 +62,7 @@ class MembershipManagerTest {
   }
 
   @Test
-  void leavesAndRejoinsClub() {
+  void TC4_6_leavesAndRejoinsClub() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(db.findMembership(STUDENT, "C-12")).thenReturn(MEMBERSHIP_ACTIVE);
     assertTrue(service.leaveClub(STUDENT, "C-12"));

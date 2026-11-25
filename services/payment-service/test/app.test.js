@@ -35,7 +35,7 @@ async function pay(app, amount, overrides = {}) {
   return response.body;
 }
 
-test('pays fees and issues receipts', async () => {
+test('TC8.1 TC8.2 pays fees and issues receipts', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -68,7 +68,7 @@ test('pays fees and issues receipts', async () => {
   }
 });
 
-test('requests, approves, rejects and issues refunds', async () => {
+test('TC8.3 TC8.4 requests, approves, rejects and issues refunds', async () => {
   const app = await setup();
   const token = makeToken();
   const admin = adminToken();

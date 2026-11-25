@@ -24,7 +24,7 @@ function setup() {
   });
 }
 
-test('browses routes and schedules', async () => {
+test('TC3.1 TC3.2 browses routes and schedules', async () => {
   const app = await setup();
   try {
     const routes = await call(app.base, '/api/routes');
@@ -49,7 +49,7 @@ test('browses routes and schedules', async () => {
   }
 });
 
-test('books a seat, prevents duplicates and cancels with a refund', async () => {
+test('TC3.3 TC3.5 books a seat, prevents duplicates and cancels with a refund', async () => {
   const app = await setup();
   const token = makeToken();
   try {
@@ -103,7 +103,7 @@ test('books a seat, prevents duplicates and cancels with a refund', async () => 
   }
 });
 
-test('enforces schedule capacity', async () => {
+test('TC3.4 enforces schedule capacity', async () => {
   const app = await setup();
   try {
     const route = await call(app.base, '/api/admin/routes', {
@@ -142,7 +142,7 @@ test('enforces schedule capacity', async () => {
   }
 });
 
-test('admin manages routes and schedules while students are denied', async () => {
+test('TC3.6 TC3.7 admin manages routes and schedules while students are denied', async () => {
   const app = await setup();
   try {
     const denied = await call(app.base, '/api/admin/routes', {

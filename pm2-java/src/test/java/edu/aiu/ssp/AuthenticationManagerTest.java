@@ -20,7 +20,7 @@ class AuthenticationManagerTest {
   @InjectMocks AuthenticationManager service;
 
   @Test
-  void registersStudentAndSendsWelcome() {
+  void TC1_1_registersStudentAndSendsWelcome() {
     when(ids.next("user")).thenReturn("U-1001");
     when(hasher.hash(DATA.password())).thenReturn("fixture-password-hash");
     when(db.findRoleByName("STUDENT")).thenReturn(new Role("R-01", "STUDENT"));
@@ -36,7 +36,7 @@ class AuthenticationManagerTest {
   }
 
   @Test
-  void duplicateEmailStopsRegistration() {
+  void TC1_2_duplicateEmailStopsRegistration() {
     when(db.findUserByEmail(DATA.email())).thenReturn(mock(User.class));
     assertThrows(DuplicateEmailException.class, () -> service.register(DATA));
     verify(db, never()).saveUser(any());
@@ -56,7 +56,7 @@ class AuthenticationManagerTest {
   }
 
   @Test
-  void managesEveryUserStatusTransition() {
+  void TC1_10_managesEveryUserStatusTransition() {
     checkStatusChange("U-1", "ACTIVE", "SUSPENDED");
     checkStatusChange("U-2", "SUSPENDED", "ACTIVE");
     checkStatusChange("U-3", "ACTIVE", "DEACTIVATED");
@@ -85,7 +85,7 @@ class AuthenticationManagerTest {
   }
 
   @Test
-  void loginGuardDistinguishesSuspendedAndDeactivated() {
+  void TC1_4_loginGuardDistinguishesSuspendedAndDeactivated() {
     assertDoesNotThrow(() -> service.assertLoginAllowed(USER_ACTIVE));
     assertThrows(AccountSuspendedException.class, () -> service.assertLoginAllowed(USER_SUSPENDED));
     assertThrows(

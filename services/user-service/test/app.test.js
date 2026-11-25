@@ -56,7 +56,7 @@ async function call(base, path, { method = 'GET', body, token } = {}) {
   return { status: response.status, body: text ? JSON.parse(text) : null };
 }
 
-test('registers, logs in and rejects duplicate email', async () => {
+test('TC1.1 TC1.2 TC1.3 registers, logs in and rejects duplicate email', async () => {
   const app = await harness();
   try {
     const created = await call(app.base, '/api/auth/register', {
@@ -84,7 +84,7 @@ test('registers, logs in and rejects duplicate email', async () => {
   }
 });
 
-test('rejects bad credentials and suspended accounts', async () => {
+test('TC1.4 TC1.10 rejects bad credentials and suspended accounts', async () => {
   const app = await harness();
   try {
     const bad = await call(app.base, '/api/auth/login', {
@@ -116,7 +116,7 @@ test('rejects bad credentials and suspended accounts', async () => {
   }
 });
 
-test('updates profile and recovers password', async () => {
+test('TC1.5 TC1.6 TC1.7 updates profile and recovers password', async () => {
   const app = await harness();
   try {
     const login = await call(app.base, '/api/auth/login', {
@@ -155,7 +155,7 @@ test('updates profile and recovers password', async () => {
   }
 });
 
-test('aggregates activity from peer services', async () => {
+test('TC1.8 aggregates activity from peer services', async () => {
   const fetchImpl = async (url) => {
     const body = url.includes('accommodation')
       ? { items: [{ type: 'BOOKING', id: 'b1', title: 'Room', status: 'CONFIRMED', date: '2026-01-02' }] }
@@ -182,7 +182,7 @@ test('aggregates activity from peer services', async () => {
   }
 });
 
-test('admin assigns roles and creates staff accounts', async () => {
+test('TC1.9 admin assigns roles and creates staff accounts', async () => {
   const app = await harness();
   try {
     const admin = await call(app.base, '/api/auth/login', {

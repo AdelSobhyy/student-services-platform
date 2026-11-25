@@ -19,7 +19,7 @@ class SupportTicketManagerTest {
   @InjectMocks SupportTicketManager service;
 
   @Test
-  void opensTicketAndRequestsNotification() {
+  void TC6_3_opensTicketAndRequestsNotification() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(ids.next("ticket")).thenReturn("T-401");
     SupportTicket result = service.submitTicket(STUDENT, SUBJECT, DESCRIPTION);
@@ -46,7 +46,7 @@ class SupportTicketManagerTest {
   }
 
   @Test
-  void repliesAndResolvesTicketThroughDiagram() {
+  void TC6_4_repliesAndResolvesTicketThroughDiagram() {
     when(db.findTicket("T-401")).thenReturn(TICKET_OPEN, TICKET_IN_PROGRESS);
     assertEquals(
         "IN_PROGRESS", service.respondToTicket("T-401", "We are checking", false).status());

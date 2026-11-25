@@ -16,7 +16,7 @@ class ClubBrowserTest {
   @InjectMocks ClubBrowser service;
 
   @Test
-  void readsRoboticsClub() {
+  void TC4_1_readsRoboticsClub() {
     when(db.findClub("C-12")).thenReturn(ROBOTICS);
     assertEquals(ROBOTICS, service.getClub("C-12"));
     verify(db).findClub("C-12");

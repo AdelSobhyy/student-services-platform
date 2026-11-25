@@ -18,14 +18,14 @@ class KitchenInventoryManagerTest {
   @InjectMocks KitchenInventoryManager service;
 
   @Test
-  void readsGrilledChickenStock() {
+  void TC5_2_readsGrilledChickenStock() {
     when(db.findMeal("M-55")).thenReturn(CHICKEN);
     assertEquals(CHICKEN, service.getStockStatus("M-55"));
     verify(db).findMeal("M-55");
   }
 
   @Test
-  void appliesMealStockTransitions() {
+  void TC5_8_appliesMealStockTransitions() {
     when(db.findMeal("M-55")).thenReturn(CHICKEN, CHICKEN_OUT, CHICKEN_OUT);
     assertEquals("OUT_OF_STOCK", service.setStockStatus("M-55", "OUT_OF_STOCK").stockStatus());
     assertEquals("AVAILABLE", service.setStockStatus("M-55", "AVAILABLE").stockStatus());
@@ -50,7 +50,7 @@ class KitchenInventoryManagerTest {
   }
 
   @Test
-  void createsMealAsAvailable() {
+  void TC5_7_createsMealAsAvailable() {
     BigDecimal price = new BigDecimal("20.00");
     assertEquals("AVAILABLE", service.createMeal("M-99", "Salad", price, List.of()).stockStatus());
     verify(db).saveMeal(new Meal("M-99", "Salad", price, "AVAILABLE", List.of()));

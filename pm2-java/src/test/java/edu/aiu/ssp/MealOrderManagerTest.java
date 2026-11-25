@@ -23,7 +23,7 @@ class MealOrderManagerTest {
   @InjectMocks MealOrderManager service;
 
   @Test
-  void ordersGrilledChickenAndPays() {
+  void TC5_3_ordersGrilledChickenAndPays() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(inventory.getStockStatus("M-55")).thenReturn(CHICKEN);
     when(ids.next("order")).thenReturn("O-7001");
@@ -53,7 +53,7 @@ class MealOrderManagerTest {
   }
 
   @Test
-  void unavailableMealStopsOrder() {
+  void TC5_4_unavailableMealStopsOrder() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(inventory.getStockStatus("M-55"))
         .thenReturn(new Meal("M-55", CHICKEN.name(), CHICKEN.price(), "OUT_OF_STOCK", List.of()));
@@ -62,7 +62,7 @@ class MealOrderManagerTest {
   }
 
   @Test
-  void paidOrderHighlightsConflicts() {
+  void TC5_10_paidOrderHighlightsConflicts() {
     when(account.verifyStudent(STUDENT)).thenReturn(true);
     when(inventory.getStockStatus("M-71")).thenReturn(NOODLES);
     when(ids.next("order")).thenReturn("O-7001");
@@ -80,7 +80,7 @@ class MealOrderManagerTest {
   }
 
   @Test
-  void cancelsPaidOrderBeforeDeadline() {
+  void TC5_5_cancelsPaidOrderBeforeDeadline() {
     when(db.findOrder("O-7001")).thenReturn(ORDER_PAID);
     assertEquals("CANCELLED", service.cancelOrder("O-7001", true).status());
     verify(db).updateOrderStatus("O-7001", "CANCELLED");
@@ -88,7 +88,7 @@ class MealOrderManagerTest {
   }
 
   @Test
-  void rejectsLateCancellationBeforeAnyPersistence() {
+  void TC5_6_rejectsLateCancellationBeforeAnyPersistence() {
     assertThrows(CancellationDeadlinePassed.class, () -> service.cancelOrder("O-7001", false));
     verifyNoInteractions(db, comm);
   }
