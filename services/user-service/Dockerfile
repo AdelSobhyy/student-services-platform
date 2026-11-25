@@ -6,6 +6,7 @@ RUN npm ci --ignore-scripts
 FROM dependencies AS test
 COPY src ./src
 COPY test ./test
+COPY db ./db
 RUN npm test
 
 FROM dependencies AS production-dependencies
