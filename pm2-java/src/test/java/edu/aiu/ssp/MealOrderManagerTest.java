@@ -78,4 +78,36 @@ class MealOrderManagerTest {
     assertThrows(UnauthorizedStudentException.class, () -> service.orderMeal(STUDENT, "M-55"));
     verifyNoInteractions(inventory, db, payment);
   }
+
+  @Test
+  void cancelsPaidOrderBeforeDeadline() {
+    when(db.findOrder("O-7001")).thenReturn(ORDER_PAID);
+    assertEquals("CANCELLED", service.cancelOrder("O-7001", true).status());
+    verify(db).updateOrderStatus("O-7001", "CANCELLED");
+    verify(comm).sendNotification(STUDENT, "Order O-7001 cancelled");
+  }
+
+  @Test
+  void rejectsLateCancellationBeforeAnyPersistence() {
+    assertThrows(CancellationDeadlinePassed.class, () -> service.cancelOrder("O-7001", false));
+    verifyNoInteractions(db, comm);
+  }
+
+  @Test
+  void cannotCancelCompletedOrder() {
+    when(db.findOrder("O-7001"))
+        .thenReturn(
+            new MealOrder(
+                "O-7001", STUDENT, "M-55", CHICKEN.price(), List.of(), "COMPLETED"));
+    assertThrows(IllegalStateException.class, () -> service.cancelOrder("O-7001", true));
+    verify(db, never()).updateOrderStatus(anyString(), anyString());
+  }
+
+  @Test
+  void servesPaidOrder() {
+    when(db.findOrder("O-7001")).thenReturn(ORDER_PAID);
+    assertEquals("COMPLETED", service.serveOrder("O-7001").status());
+    verify(db).updateOrderStatus("O-7001", "COMPLETED");
+    verify(comm).sendNotification(STUDENT, "Order O-7001 served");
+  }
 }

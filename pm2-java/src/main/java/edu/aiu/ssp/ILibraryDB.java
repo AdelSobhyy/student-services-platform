@@ -7,6 +7,10 @@ public interface ILibraryDB {
 
   void saveReservation(Reservation reservation);
 
+  Reservation findReservation(String id);
+
+  void updateReservationStatus(String id, String status);
+
   void updateCopies(String id, int delta);
 
   void logDownload(String resourceId, String studentId);

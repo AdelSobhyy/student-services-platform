@@ -33,10 +33,11 @@ jobs:
           path: |
             pm2-java/target/surefire-reports/
             pm2-java/target/site/jacoco/
-      - name: Analyze and enforce SonarQube quality gate
+      - name: Analyze and enforce SonarQube quality gate (coverage >= 80%, duplication <= 3%)
         env:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: student-services-pm2
         run: |
           if [ -n "$SONAR_HOST_URL" ]; then
             scripts/pm2/quality-gate.sh

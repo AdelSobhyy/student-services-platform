@@ -72,4 +72,23 @@ class FeePaymentProcessorTest {
     }
     verifyNoInteractions(db, gateway);
   }
+
+  @Test
+  void issuesRefundForPaidPayment() {
+    when(db.findPayment("P-9001")).thenReturn(PAYMENT_PAID);
+    when(gateway.processOnlineRefund("P-9001")).thenReturn(true);
+    assertEquals("REFUNDED", service.issueRefund("P-9001").status());
+    InOrder calls = inOrder(db, gateway, comm);
+    calls.verify(db).findPayment("P-9001");
+    calls.verify(gateway).processOnlineRefund("P-9001");
+    calls.verify(db).updatePaymentStatus("P-9001", "REFUNDED");
+    calls.verify(comm).sendNotification(STUDENT, "Payment P-9001 refunded");
+  }
+
+  @Test
+  void cannotRefundFailedPayment() {
+    when(db.findPayment("P-9001")).thenReturn(PAYMENT_FAILED);
+    assertThrows(InvalidStateException.class, () -> service.issueRefund("P-9001"));
+    verify(gateway, never()).processOnlineRefund(anyString());
+  }
 }

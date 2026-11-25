@@ -23,7 +23,17 @@ class GatewayAdapterTest {
   }
 
   @Test
-  void declinedCharge() {
+  void declinedChargeCallsGateway() {
+    when(externalGW.charge("P-9001", FEE)).thenReturn("   ");
     assertFalse(service.processOnlinePayment("P-9001", FEE));
+    verify(externalGW).charge("P-9001", FEE);
+  }
+
+  @Test
+  void refundCallsGatewayAndHandlesFailure() {
+    when(externalGW.refund("P-9001")).thenReturn("RF-1", "   ");
+    assertTrue(service.processOnlineRefund("P-9001"));
+    assertFalse(service.processOnlineRefund("P-9001"));
+    verify(externalGW, times(2)).refund("P-9001");
   }
 }

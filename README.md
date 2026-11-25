@@ -126,13 +126,13 @@ If Docker is unavailable, `npm run dev:memory` starts all eight services with in
 
 ## PM2 Java design model
 
-The `pm2-java` module contains the PM2 object/sequence/collaboration/state implementation model with JUnit and Mockito tests. Build it with:
+The `pm2-java` module contains the PM2 object/sequence/collaboration/state implementation model with JUnit and Mockito tests. The 202 test executions include all 105 valid/invalid rows in `transitions.csv`, manager-level tests for every state transition, and `Mockito.verify()` assertions for collaboration messages. Shared object-diagram instances live in `Fixtures.java`. Build it with:
 
 ```sh
 mvn --batch-mode -f pm2-java/pom.xml clean verify
 ```
 
-GitHub Actions uploads Surefire and JaCoCo reports and runs the SonarQube gate. The Jenkinsfile runs the same Maven build and publishes JUnit/JaCoCo. See `docs/devops.md`.
+`verify` enforces a JaCoCo bundle minimum of 80% instruction and branch coverage. GitHub Actions uploads Surefire/JaCoCo reports and runs the SonarQube gate (coverage ≥ 80%, duplicated lines ≤ 3%); the Jenkinsfile runs the same Maven build, publishes JUnit, archives JaCoCo and enforces the same gate. See `docs/devops.md` for the CI comparison.
 
 ## Team and branches
 

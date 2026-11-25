@@ -107,7 +107,23 @@ ghcr.io/<owner>/student-services-platform-frontend:<commit-sha>
 
 `main` also receives `latest`; `develop` receives `develop`.
 
-`.github/workflows/ci.yml` and `Jenkinsfile` run the PM2 Java Maven build, JUnit/Mockito tests, JaCoCo coverage and the SonarQube quality gate. See the root README for the SonarQube configuration.
+`.github/workflows/ci.yml` and `Jenkinsfile` run the PM2 Java Maven build, JUnit/Mockito tests, JaCoCo coverage and the SonarQube quality gate. `mvn verify` fails below 80% instruction or branch coverage (`jacoco:check`). `scripts/pm2/verify-quality-gate.sh` independently checks the Sonar verdict plus coverage ≥ 80% and duplication ≤ 3%, and writes `pm2-java/target/sonar-quality-gate.json` for the artifacts. With `SONAR_HOST_URL` set the real server is used; otherwise `scripts/pm2/quality-gate-ci.sh` starts a temporary SonarQube container with the same gate conditions. See the root README for the SonarQube configuration.
+
+### GitHub Actions vs Jenkins
+
+| Concern | GitHub Actions (`.github/workflows/ci.yml`) | Jenkins (`Jenkinsfile`) |
+| --- | --- | --- |
+| Trigger | Push/PR to `pm2-devops`, `main`, `develop`, plus manual | Whatever the Jenkins job is configured to listen to |
+| Environment | `ubuntu-latest`, Temurin JDK 21, Maven cache | Any agent with JDK 21 and Maven on `PATH` |
+| Build | `mvn clean verify` (JUnit, Mockito, JaCoCo `check`) | Same command |
+| Test reports | Uploaded as `pm2-java-reports` artifact | Published with the `junit` step |
+| Coverage | JaCoCo HTML/XML uploaded with the reports | Archived with `archiveArtifacts` |
+| Sonar credentials | `vars.SONAR_HOST_URL` / `secrets.SONAR_TOKEN` | `SONAR_HOST_URL` env / `pm2-sonar-token` credential |
+| Sonar gate | `quality-gate.sh` or temporary-container fallback | Same scripts and thresholds |
+| Gate evidence | `pm2-sonarqube-gate` artifact | Archived workspace artifact |
+| Scope | Java model only; the separate `containers.yml` builds, smoke-tests and publishes images | Java model only; container smoke/publish stays in GitHub Actions |
+
+The two pipelines therefore give equivalent Java quality evidence. The deliberate difference is that image build, Compose smoke and GHCR publishing remain GitHub Actions-only.
 
 ## Local test suites
 

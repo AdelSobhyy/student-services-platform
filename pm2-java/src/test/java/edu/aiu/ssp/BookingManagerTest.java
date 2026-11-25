@@ -63,4 +63,36 @@ class BookingManagerTest {
     assertThrows(RoomNotAvailableException.class, () -> service.bookRoom(STUDENT, "R-204", DATES));
     verifyNoInteractions(db, payment, comm);
   }
+
+  @Test
+  void cancelsConfirmedAndPendingBookings() {
+    when(db.findBooking("B-1")).thenReturn(BOOKING_CONFIRMED);
+    when(db.findBooking("B-2"))
+        .thenReturn(new Booking("B-2", STUDENT, "R-204", DATES, FEE, "PENDING"));
+    assertEquals("CANCELLED", service.cancelBooking("B-1").status());
+    assertEquals("CANCELLED", service.cancelBooking("B-2").status());
+    InOrder calls = inOrder(db, inventory, comm);
+    calls.verify(db).updateBookingStatus("B-5001", "CANCELLED");
+    calls.verify(inventory).updateAvailability("R-204", "AVAILABLE");
+    calls.verify(comm).sendNotification(STUDENT, "Booking B-5001 cancelled");
+    calls.verify(db).updateBookingStatus("B-2", "CANCELLED");
+    verify(inventory, times(2)).updateAvailability("R-204", "AVAILABLE");
+  }
+
+  @Test
+  void rejectsCancellingAnAlreadyCancelledBooking() {
+    when(db.findBooking("B-1"))
+        .thenReturn(new Booking("B-1", STUDENT, "R-204", DATES, FEE, "CANCELLED"));
+    assertThrows(IllegalStateException.class, () -> service.cancelBooking("B-1"));
+    verify(db, never()).updateBookingStatus(anyString(), anyString());
+    verifyNoInteractions(inventory, comm);
+  }
+
+  @Test
+  void checkoutCompletesConfirmedBooking() {
+    when(db.findBooking("B-5001")).thenReturn(BOOKING_CONFIRMED);
+    assertEquals("COMPLETED", service.checkout("B-5001").status());
+    verify(db).updateBookingStatus("B-5001", "COMPLETED");
+    verify(comm).sendNotification(STUDENT, "Booking B-5001 completed");
+  }
 }

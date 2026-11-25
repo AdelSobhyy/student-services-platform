@@ -1,3 +1,3 @@
 package edu.aiu.ssp;
 
-public class RoomNotAvailableException extends RuntimeException {}
+public class RoomNotAvailableException extends IllegalStateException {}

@@ -54,4 +54,43 @@ class AuthenticationManagerTest {
     }
     verifyNoInteractions(db, comm);
   }
+
+  @Test
+  void managesEveryUserStatusTransition() {
+    checkStatusChange("U-1", "ACTIVE", "SUSPENDED");
+    checkStatusChange("U-2", "SUSPENDED", "ACTIVE");
+    checkStatusChange("U-3", "ACTIVE", "DEACTIVATED");
+    checkStatusChange("U-4", "SUSPENDED", "DEACTIVATED");
+    checkStatusChange("U-5", "DEACTIVATED", "ACTIVE");
+    checkStatusChange("U-6", "DEACTIVATED", "END");
+    verify(db, times(6)).updateUserStatus(anyString(), anyString());
+    verify(comm, times(6)).sendNotification(anyString(), anyString());
+  }
+
+  private void checkStatusChange(String id, String from, String target) {
+    when(db.findUserById(id)).thenReturn(new User(id, "User", "u@student.edu", "hash", from));
+    assertEquals(target, service.manageAccountStatus(id, target).status());
+    verify(db).updateUserStatus(id, target);
+  }
+
+  @Test
+  void rejectsInvalidUserStatusChanges() {
+    when(db.findUserById("U-1")).thenReturn(USER_ACTIVE);
+    assertThrows(IllegalStateException.class, () -> service.manageAccountStatus("U-1", "ACTIVE"));
+    when(db.findUserById("U-2")).thenReturn(USER_DEACTIVATED);
+    assertThrows(
+        IllegalStateException.class, () -> service.manageAccountStatus("U-2", "SUSPENDED"));
+    verify(db, never()).updateUserStatus(anyString(), anyString());
+    verifyNoInteractions(comm);
+  }
+
+  @Test
+  void loginGuardDistinguishesSuspendedAndDeactivated() {
+    assertDoesNotThrow(() -> service.assertLoginAllowed(USER_ACTIVE));
+    assertThrows(AccountSuspendedException.class, () -> service.assertLoginAllowed(USER_SUSPENDED));
+    assertThrows(
+        AccountDeactivatedException.class, () -> service.assertLoginAllowed(USER_DEACTIVATED));
+    assertThrows(ValidationException.class, () -> service.assertLoginAllowed(null));
+    verifyNoInteractions(db, comm);
+  }
 }

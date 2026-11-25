@@ -48,4 +48,38 @@ class ClubApprovalManagerTest {
     verify(db, never()).updateClubStatus(any(), any());
     verifyNoInteractions(comm);
   }
+
+  @Test
+  void adminRejectsPendingClub() {
+    when(account.verifyRole(ADMIN, "ADMIN")).thenReturn(true);
+    when(db.findClub("C-15")).thenReturn(PENDING_CLUB);
+    service.rejectClub(ADMIN, "C-15");
+    InOrder calls = inOrder(account, db, comm);
+    calls.verify(account).verifyRole(ADMIN, "ADMIN");
+    calls.verify(db).updateClubStatus("C-15", "REJECTED");
+    calls.verify(comm).sendNotification("S-215", "Photography Club rejected");
+  }
+
+  @Test
+  void adminSuspendsApprovedClubAndReinstatesSuspendedClub() {
+    when(account.verifyRole(ADMIN, "ADMIN")).thenReturn(true);
+    when(db.findClub("C-12")).thenReturn(ROBOTICS, ROBOTICS_SUSPENDED);
+    service.suspendClub(ADMIN, "C-12");
+    service.approveClub(ADMIN, "C-12");
+    verify(db).updateClubStatus("C-12", "SUSPENDED");
+    verify(db).updateClubStatus("C-12", "APPROVED");
+    verify(comm).sendNotification("S-210", "Robotics Club suspended");
+    verify(comm).sendNotification("S-210", "Robotics Club approved");
+  }
+
+  @Test
+  void cannotSuspendPendingOrRejectApprovedClub() {
+    when(account.verifyRole(ADMIN, "ADMIN")).thenReturn(true);
+    when(db.findClub("C-15")).thenReturn(PENDING_CLUB);
+    assertThrows(InvalidStateException.class, () -> service.suspendClub(ADMIN, "C-15"));
+    when(db.findClub("C-12")).thenReturn(ROBOTICS);
+    assertThrows(InvalidStateException.class, () -> service.rejectClub(ADMIN, "C-12"));
+    verify(db, never()).updateClubStatus(anyString(), anyString());
+    verifyNoInteractions(comm);
+  }
 }
