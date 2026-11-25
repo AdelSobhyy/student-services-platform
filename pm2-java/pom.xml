@@ -5,7 +5,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sonar.projectKey>student-services-pm2</sonar.projectKey>
+    <sonar.projectKey>student-services-platform999998888889999988</sonar.projectKey>
     <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
   <dependencies>

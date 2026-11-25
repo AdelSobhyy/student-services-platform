@@ -107,7 +107,7 @@ ghcr.io/<owner>/student-services-platform-frontend:<commit-sha>
 
 `main` also receives `latest`; `develop` receives `develop`.
 
-`.github/workflows/ci.yml` and `Jenkinsfile` run the PM2 Java Maven build, JUnit/Mockito tests, JaCoCo coverage and the SonarQube quality gate. `mvn verify` fails below 80% instruction or branch coverage (`jacoco:check`). `scripts/pm2/verify-quality-gate.sh` independently checks the Sonar verdict plus coverage ≥ 80% and duplication ≤ 3%, and writes `pm2-java/target/sonar-quality-gate.json` for the artifacts. With `SONAR_HOST_URL` set the real server is used; otherwise `scripts/pm2/quality-gate-ci.sh` starts a temporary SonarQube container with the same gate conditions. See the root README for the SonarQube configuration.
+`.github/workflows/ci.yml` and `Jenkinsfile` run the PM2 Java Maven build, JUnit/Mockito tests, JaCoCo coverage and the SonarQube quality gate. The configured SonarQube project key is `student-services-platform999998888889999988`; the project display name may remain `student-services-platform`. `mvn verify` fails below 80% instruction or branch coverage (`jacoco:check`). `scripts/pm2/verify-quality-gate.sh` independently checks the Sonar verdict plus coverage ≥ 80% and duplication ≤ 3%, and writes `pm2-java/target/sonar-quality-gate.json` for the artifacts. With `SONAR_HOST_URL` set the real server is used; otherwise `scripts/pm2/quality-gate-ci.sh` starts a temporary SonarQube container with the same gate conditions. See the root README for the SonarQube configuration.
 
 ### GitHub Actions vs Jenkins
 

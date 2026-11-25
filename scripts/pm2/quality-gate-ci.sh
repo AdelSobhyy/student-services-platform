@@ -4,7 +4,7 @@ set -euo pipefail
 # Scan each CI checkout in an isolated SonarQube project with overall-code conditions.
 container="pm2-sonar-$(openssl rand -hex 8)"
 image='sonarqube:26.11.0.134175-community@sha256:7b2296713a92b8ea0dd7a083a25faadc59376c9a1e6daf2744a89711c54ea1ba'
-project='student-services-pm2'
+project='student-services-platform999998888889999988'
 gate='PM2 Java overall quality'
 
 docker run --detach --rm --name "$container" --publish 127.0.0.1::9000 \
@@ -56,7 +56,7 @@ sonar_api api/users/change_password --data-urlencode login=admin \
   --data-urlencode previousPassword=admin --data-urlencode "password=$new_password" >/dev/null
 admin_password=$new_password
 sonar_api api/projects/create --data-urlencode "project=$project" \
-  --data-urlencode name='Student Services PM2' >/dev/null
+  --data-urlencode name='student-services-platform' >/dev/null
 sonar_api api/qualitygates/create --data-urlencode "name=$gate" >/dev/null
 sonar_api api/qualitygates/create_condition --data-urlencode "gateName=$gate" \
   --data-urlencode metric=coverage --data-urlencode op=LT --data-urlencode error=80 >/dev/null
