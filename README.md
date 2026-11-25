@@ -1,8 +1,140 @@
 # Student Services Platform
 
-A team monorepo for student identity, accommodation, transport, clubs, dining, communication, library services, and payments.
+A full-stack student services platform with eight PostgreSQL-backed microservices and a browser client.
 
-## Team members
+| Area | Technology |
+| --- | --- |
+| Backend | Node.js 24, Express 5, PostgreSQL 17 |
+| Frontend | Dependency-free single-page app, served by Nginx |
+| Containers | Docker Compose |
+| CI / registry | GitHub Actions, GHCR |
+| PM2 design model | Java 21, JUnit 5, Mockito, JaCoCo |
+
+## Demo accounts
+
+The user service creates these accounts on first start:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Administrator | `admin@campus.edu` | `Admin123!` |
+| Student | `student@campus.edu` | `Student123!` |
+| Club leader | `leader@campus.edu` | `Leader123!` |
+| Staff | `staff@campus.edu` | `Staff123!` |
+
+Seed accounts use stable IDs shared by all services, so the student and club-leader demos already own seeded bookings, orders, notifications, memberships and club events. New students can register from the login screen.
+
+## Quick start
+
+```sh
+docker compose up --build
+```
+
+Open <http://localhost:8080> for the frontend. The services are also published on localhost:
+
+| Service | Port | Requirements |
+| --- | --- | --- |
+| user-service | 3001 | FR1–FR3 |
+| accommodation-service | 3002 | FR4–FR7 |
+| transport-service | 3003 | FR8–FR10 |
+| club-service | 3004 | FR11–FR14 |
+| dining-service | 3005 | FR15–FR18 |
+| communication-service | 3006 | FR19–FR22 |
+| library-service | 3007 | FR23 |
+| payment-service | 3008 | FR24 |
+
+Stop the stack with `docker compose down`. Add `--volumes` only when you intentionally want to delete demo data.
+
+## Functional coverage
+
+| Requirements | Implemented features |
+| --- | --- |
+| FR1 Manage Authentication | Register, login, password recovery and reset |
+| FR2 Manage User Profile | View/update profile, aggregated activity history |
+| FR3 Manage System Roles | Create staff accounts, assign roles, suspend/deactivate/reactivate |
+| FR4 Browse Accommodations | List, filter by price/capacity/availability/building |
+| FR5 Manage Housing Bookings | Book with overlap checks, cancel and release room, automatic payment |
+| FR6 Manage Room Inventory | Building/room CRUD, availability and maintenance status |
+| FR7 Manage Accommodation Reviews | Submit review after a completed stay, view ratings |
+| FR8 Browse Transport Routes | Route and schedule browsing |
+| FR9 Manage Transport Bookings | Seat booking with capacity enforcement, cancel and release |
+| FR10 Manage Route | Route and schedule CRUD |
+| FR11 Browse Clubs | Browse and search by category/interest |
+| FR12 Manage Memberships | Join and leave clubs |
+| FR13 Manage Club Events | Club-leader/admin event CRUD, joined-club event feed |
+| FR14 Manage Club Approvals | Propose, approve, reject and suspend clubs |
+| FR15 Browse Dining Menus | Daily menus, meal details, ingredients and nutrition |
+| FR16 Manage Meal Orders | Order meals, cancel before deadline |
+| FR17 Manage Kitchen Inventory | Meal CRUD, available/out-of-stock status |
+| FR18 Manage Dietary Preferences | Save restrictions/allergies, highlight conflicts |
+| FR19 Manage Notifications | Automatic notifications, admin broadcasts, read state |
+| FR20 Manage Support Tickets | Submit, view, respond, resolve |
+| FR21 Manage Analytics and Reports | Admin summary statistics and club CSV report |
+| FR22 Manage System Settings | Semester dates, announcements |
+| FR23 Manage Library Resources | Search, reserve printed books, download digital items, collect/cancel/return, catalog CRUD |
+| FR24 Manage Payments | Pay fees, receipts, refund requests, approve/reject/issue refunds |
+
+The exact endpoint contract is in [docs/service-api.md](docs/service-api.md).
+
+## Architecture
+
+```text
+Browser (frontend :8080)
+  ├─ user-service :3001 ─────────── user-db
+  ├─ accommodation-service :3002 ── accommodation-db
+  ├─ transport-service :3003 ────── transport-db
+  ├─ club-service :3004 ─────────── club-db
+  ├─ dining-service :3005 ───────── dining-db
+  ├─ communication-service :3006 ── communication-db
+  ├─ library-service :3007 ──────── library-db
+  └─ payment-service :3008 ──────── payment-db
+```
+
+Each service owns its database. Services communicate through authenticated internal HTTP calls:
+
+- payment charges/refunds for accommodation, transport and dining;
+- communication notifications for bookings, orders, payments and tickets;
+- user activity history aggregating peer activity feeds;
+- communication analytics/report aggregating peer statistics.
+
+Internal calls require the shared `SERVICE_TOKEN`. User requests use a signed bearer token issued by `user-service`; all services verify it with the shared `AUTH_SECRET`.
+
+For local development the defaults in `.env.example` are used. Change `AUTH_SECRET`, `SERVICE_TOKEN`, and `DEV_DB_PASSWORD` outside local development.
+
+## Tests
+
+Run all backend suites:
+
+```sh
+npm test
+```
+
+Run syntax checks:
+
+```sh
+npm run check
+```
+
+Each service also runs its own suite with `npm test --prefix services/<service>`. Tests use `pg-mem` so they do not need a running database. The Docker test stage executes the same suites before an image can be published.
+
+With the stack running, execute end-to-end smoke checks:
+
+```sh
+npm run smoke
+```
+
+If Docker is unavailable, `npm run dev:memory` starts all eight services with in-memory `pg-mem` databases and serves the same frontend on port 8080. Data is reset whenever that process restarts; use Compose for a persistent stack.
+
+## PM2 Java design model
+
+The `pm2-java` module contains the PM2 object/sequence/collaboration/state implementation model with JUnit and Mockito tests. Build it with:
+
+```sh
+mvn --batch-mode -f pm2-java/pom.xml clean verify
+```
+
+GitHub Actions uploads Surefire and JaCoCo reports and runs the SonarQube gate. The Jenkinsfile runs the same Maven build and publishes JUnit/JaCoCo. See `docs/devops.md`.
+
+## Team and branches
 
 | Member | GitHub | Requirements |
 | --- | --- | --- |
@@ -13,71 +145,9 @@ A team monorepo for student identity, accommodation, transport, clubs, dining, c
 | Mohamed Essam | @mohamedessam91011 | FR17–FR20 |
 | Youssef Mohamed | @yy0446419-lab | FR21–FR24 |
 
-## Services and owners
+- `main`: stable code, changes through reviewed pull requests.
+- `develop`: integration branch.
+- `feature/<service-name>`: per-service feature branch.
+- Feature pull requests target `develop`; releases target `main`.
 
-Ownership follows the functional requirement allocation in the project document. Services spanning members’ requirements are shared.
-
-| Service folder / Jira label | Requirements | Owners |
-| --- | --- | --- |
-| user-service | FR1–FR3 | Emadaldin Mohamed |
-| accommodation-service | FR4–FR7 | Emadaldin Mohamed (FR4); Youssef Hesham (FR5–FR7) |
-| transport-service | FR8–FR10 | Youssef Hesham (FR8); Marwan Tamer (FR9–FR10) |
-| club-service | FR11–FR14 | Marwan Tamer (FR11–FR12); Adel Sobhy (FR13–FR14) |
-| dining-service | FR15–FR18 | Adel Sobhy (FR15–FR16); Mohamed Essam (FR17–FR18) |
-| communication-service | FR19–FR22 | Mohamed Essam (FR19–FR20); Youssef Mohamed (FR21–FR22) |
-| library-service | FR23 | Youssef Mohamed |
-| payment-service | FR24 | Youssef Mohamed |
-
-## Planned tech stack
-
-Backend: Node.js 24 with Express 5. Database: PostgreSQL 17, isolated per service. Containers: Docker and Docker Compose. CI and registry: GitHub Actions and GHCR. Frontend remains unselected.
-
-## Planned folder structure
-
-```text
-student-services-platform/
-  README.md
-  frontend/
-  services/
-    user-service/
-    accommodation-service/
-    transport-service/
-    club-service/
-    dining-service/
-    communication-service/
-    library-service/
-    payment-service/
-  docs/
-  infrastructure/
-```
-
-## Branch workflow
-
-- main: stable code, with changes through reviewed pull requests.
-- develop: integration branch for ongoing development.
-- feature/<service-name>: a feature branch for each service, maintained by the owners above.
-- Feature pull requests target develop; release pull requests target main.
-- GitHub does not have a separate branch-owner field. The responsibility table identifies the members maintaining each service branch.
-
-## Jira board
-
-[Student Services Platform Jira board](https://youseff0hishodent.atlassian.net/jira/software/projects/SSP/boards/34)
-
-
-## Development and containers
-
-Chosen stack: Node.js 24, Express 5, PostgreSQL 17. See [Docker and CI instructions](docs/devops.md). Start the eight-service development foundation with `docker compose up`. This is sample infrastructure code; full product features remain to be implemented.
-
-## PM2 Java DevOps
-
-Run the Java 21 build, JUnit and Mockito tests, and JaCoCo coverage with:
-
-```sh
-mvn --batch-mode -f pm2-java/pom.xml clean verify
-```
-
-GitHub Actions runs the build on a GitHub-hosted Ubuntu runner and uploads the Surefire and JaCoCo reports. Its [workflow](.github/workflows/ci.yml) reads `SONAR_HOST_URL` from an Actions variable and `SONAR_TOKEN` from an Actions secret. The [Jenkinsfile](Jenkinsfile) runs the same Maven build on a configured agent with Java 21, Maven and a POSIX shell. Jenkins publishes the JUnit results and archives JaCoCo coverage. Set `SONAR_HOST_URL` in the Jenkins job or agent environment and save the token as a Secret text credential with the ID `pm2-sonar-token`.
-
-Both pipelines run the same [SonarQube script](scripts/pm2/quality-gate.sh). The Maven scanner imports the JaCoCo XML report and waits for the SonarQube quality gate result. The server must be reachable from each runner or agent.
-
-When no SonarQube URL is configured, either pipeline starts an isolated SonarQube Community Build instance for the current checkout. Its quality gate requires at least 80% overall coverage and at most 3% duplicated lines. The pipeline saves the gate response as a build artifact and stops the instance. To use this mode with Jenkins, the Linux agent needs Bash, Docker, curl, jq and OpenSSL. The agent must be able to reach the loopback port published by its Docker daemon.
+Jira board: <https://youseff0hishodent.atlassian.net/jira/software/projects/SSP/boards/34>

@@ -1,0 +1,12 @@
+{
+  "name": "student-services-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/test-all.mjs",
+    "check": "node scripts/check-all.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "dev:memory": "node scripts/dev-memory.mjs"
+  }
+}

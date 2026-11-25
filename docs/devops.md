@@ -1,44 +1,129 @@
-# Docker and GHCR development foundation
+# Docker, CI and operations
 
 ## Scope
 
-This is a runnable infrastructure foundation for eight services, not a completed Student Services Platform. Each service exposes read-only seeded sample data in a minimal PostgreSQL table. The tables are not the complete ERDs. Authentication, booking, meal ordering, payments/refunds and notification delivery are not implemented. The sample payment is a label only; it does not process money. There is no frontend yet.
+This repository contains a runnable full-stack Student Services Platform:
+
+- eight Node.js 24 / Express 5 services, each with its own PostgreSQL 17 database;
+- a dependency-free single-page frontend served by Nginx;
+- Docker Compose orchestration;
+- GitHub Actions CI, GHCR image publishing and a Jenkins pipeline for the PM2 Java model.
+
+The functional-requirement mapping and endpoint contract are in `README.md` and `docs/service-api.md`.
 
 ## Start
 
-Install Docker Desktop with Compose v2 (or Docker Engine and Compose). From the repository root run:
+Install Docker Desktop with Compose v2, or Docker Engine and Compose. From the repository root:
 
 ```sh
-docker compose up
+docker compose up --build
 ```
 
-Compose builds missing local images, initializes eight independent PostgreSQL databases and waits for database and user-service readiness. Ports 3001 through 3008 are bound to localhost only. Database ports are not published. The built-in password is deliberately a public, local development default. Never use it in production. An optional `.env` can override values from `.env.example`; do not commit secrets. Passwords in DATABASE_URL must be URL-safe or percent-encoded.
+Compose builds the eight service images and the frontend, initializes eight independent databases, and waits for service readiness. The frontend is at <http://localhost:8080>. Service ports 3001–3008 are bound to localhost only. Database ports are not published.
 
-Run in the background and verify:
+Demo accounts are seeded by `user-service` on first start:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Administrator | `admin@campus.edu` | `Admin123!` |
+| Student | `student@campus.edu` | `Student123!` |
+| Club leader | `leader@campus.edu` | `Leader123!` |
+| Staff | `staff@campus.edu` | `Staff123!` |
+
+Verify the running stack:
 
 ```sh
-docker compose up --build -d --wait
 node scripts/smoke.mjs
 ```
 
-The smoke script requires Node 24 or newer locally. Services use ports 3001 user, 3002 accommodation, 3003 transport, 3004 club, 3005 dining, 3006 communication, 3007 library, 3008 payment. Visit `/ready`, `/dependencies` and the `/api/` resource listed in each service README. All non-user services check the user-service through Compose DNS. These are connectivity checks, not implemented business integrations.
+`docker compose down` stops the stack and keeps data. Initial SQL runs only on empty database volumes. After schema changes use migrations or recreate local volumes deliberately with `docker compose down --volumes`.
 
-`docker compose down` stops the stack and keeps data. Initial SQL runs only on empty database volumes. After schema changes use migrations; do not erase data merely to rerun seeds. `docker compose down --volumes` deletes all demo database data and should only be used intentionally.
+## Configuration
 
-## Multi-stage images
+Compose uses local demo defaults. Copy `.env.example` to `.env` to override them.
 
-Each service has its own Dockerfile and independent npm lockfile. Dependencies are installed with npm ci. Unit tests execute in a test stage. The final non-root runtime copies source from the successful test stage and only production dependencies, so test failure prevents the image build. Application health checks query PostgreSQL via /ready.
+| Variable | Purpose |
+| --- | --- |
+| `DEV_DB_PASSWORD` | PostgreSQL password used in local connection strings |
+| `AUTH_SECRET` | HMAC secret used to sign and verify user tokens |
+| `SERVICE_TOKEN` | Shared secret for service-to-service HTTP calls |
+| `GHCR_OWNER` | GitHub owner used in image names |
+| `IMAGE_TAG` | Image tag used by Compose |
+
+Never use the demo secrets in a public deployment. The password in `DATABASE_URL` must be URL-safe or percent-encoded.
+
+## Services and databases
+
+Each service owns one database and one `db/init.sql` schema:
+
+| Service | Port | Database | Main tables |
+| --- | --- | --- | --- |
+| user-service | 3001 | user | users, recovery_tokens |
+| accommodation-service | 3002 | accommodation | buildings, rooms, bookings, reviews |
+| transport-service | 3003 | transport | routes, schedules, bookings |
+| club-service | 3004 | club | clubs, memberships, events |
+| dining-service | 3005 | dining | meals, dietary_preferences, orders |
+| communication-service | 3006 | communication | notifications, tickets, ticket_messages, announcements, settings |
+| library-service | 3007 | library | resources, reservations, downloads |
+| payment-service | 3008 | payment | payments, receipts, refunds |
+
+Services expose `/health`, `/ready` and `/dependencies`. The Docker health check uses `/ready`.
+
+## Internal communication
+
+Internal endpoints require `X-Service-Token`:
+
+- `POST <payment>/api/internal/charges`
+- `POST <payment>/api/internal/refunds`
+- `POST <communication>/api/internal/notifications`
+- `GET <peer>/api/internal/activity?studentId=`
+- `GET <peer>/api/internal/stats`
+- `GET <club>/api/internal/report?type=clubs`
+- `GET <user>/api/internal/users`
+
+User requests use `Authorization: Bearer <token>` issued by `user-service`. Tokens contain the user id, role, account status and optional club id. Every service verifies the signature with `AUTH_SECRET`.
+
+## Images
+
+Each service has a multi-stage Dockerfile and independent npm lockfile. Dependencies are installed with `npm ci`. Unit tests run in a test stage with `pg-mem`, so a failing suite prevents the image build. The final non-root runtime copies only production dependencies and source.
+
+The frontend uses `nginx:1.27-alpine` and is intentionally build-free.
 
 ## CI and registry
 
-`.github/workflows/containers.yml` validates Compose, builds the eight images, starts all 16 containers and exercises real database reads and user-service connectivity. Pull requests and feature branches verify without publishing. Successful main/develop runs publish eight images using GITHUB_TOKEN with packages:write. No personal access token is required. main gets latest, develop gets develop; both get immutable commit-SHA tags.
+`.github/workflows/containers.yml`:
 
-Image pattern: `ghcr.io/adelsobhyy/student-services-platform-<service>:<commit-sha>`.
+- validates Compose;
+- builds and starts all services and databases;
+- runs the end-to-end smoke test;
+- publishes nine images (eight services + frontend) on successful `main`/`develop` runs.
 
-New GHCR packages may default to private even when the repository is public. In each package's settings, choose Public if required for your submission. Only do this for these intended project images. To verify publication, inspect Packages and pull an image with its exact SHA tag. Publishing is not complete merely because the YAML exists.
+Images follow:
 
-To run published images after a successful develop publication, set IMAGE_TAG=develop, authenticate if packages are private, and run `docker compose pull` followed by `docker compose up --no-build`.
+```text
+ghcr.io/<owner>/student-services-platform-<service>:<commit-sha>
+ghcr.io/<owner>/student-services-platform-frontend:<commit-sha>
+```
+
+`main` also receives `latest`; `develop` receives `develop`.
+
+`.github/workflows/ci.yml` and `Jenkinsfile` run the PM2 Java Maven build, JUnit/Mockito tests, JaCoCo coverage and the SonarQube quality gate. See the root README for the SonarQube configuration.
+
+## Local test suites
+
+```sh
+npm test
+npm run check
+```
+
+Each service suite uses `pg-mem` and a fake upstream HTTP client, so no database or running peer is required. The Compose smoke test is the integration layer.
 
 ## Submission evidence
 
-Capture each multi-stage Dockerfile, Compose's healthy service list, successful smoke output, the green workflow run, and eight actual GHCR packages with tags. Record the tested commit SHA. Do not describe scaffolding or an unexecuted workflow as completed business functionality or a passing pipeline.
+Capture:
+
+- the green service test output (`npm test`);
+- the green Compose smoke output;
+- the running frontend at <http://localhost:8080>;
+- the green GitHub Actions runs;
+- the nine published GHCR packages with their commit-SHA tags.
